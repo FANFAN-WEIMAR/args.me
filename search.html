@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css/search.css"/>
+<title>Results</title>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="js/mds.js"></script>
+
+<script type="text/javascript">
+
+	window.onload=function(){
+		var queryString=window.location.search.replace(/^\?/,'');
+		searchText.placeholder=queryString;
+		search(queryString);
+	}
+
+	function searchQuery(){
+		var searchValue=document.getElementById('searchText').value;
+		window.location="./search.html?"+searchValue;
+		search(searchValue);
+	}
+
+	function search(searchValue){
+		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + searchValue ;
+		$.getJSON(apiURL,function(data){
+			var length=data.results.length;
+			var conclusion;
+			var stance;
+			var div=document.getElementById('resultDisplay');
+			var divPro=document.getElementById('Pro');
+			var divCon=document.getElementById('Con');
+
+			while(divPro.firstChild){
+				divPro.removeChild(divPro.firstChild);
+			}
+			while(divCon.firstChild){
+				divCon.removeChild(divCon.firstChild);
+			}
+
+
+			for(var i=0;i<length;i++){
+				conclusion=data.results[i].conclusion;
+				stance=data.results[i].stance;
+				if(stance==true){
+					var iDiv = document.createElement('div');
+					iDiv.innerHTML=conclusion;
+					div.appendChild(iDiv);
+					document.getElementById('Pro').appendChild(iDiv);
+				}else{
+					var iDiv = document.createElement('div');
+					iDiv.innerHTML=conclusion;
+					div.appendChild(iDiv);
+					document.getElementById('Con').appendChild(iDiv);
+				}
+			}
+		})
+	}
+	function remove(id){
+		var element =document.getElementById('id');
+		element.parentNode.removeChild(element);
+	}
+</script>
+
+</head>
+
+<body>
+	<div id="container">
+		<div id="header">
+			<h1>Args.me</h1>
+			<div class="SearchContainer">
+					<input id="searchText" type="text" class="searchTerm"/>
+					<button type="submit" class="searchButton" onclick="searchQuery()"/>Go!</button>
+			</div>
+		</div>
+		<div id="body">
+
+			<div id="resultDisplay">
+				<div id="Pro"></div><div id="Con"></div>
+				<div id="euclideanDistance">Euclidean Distance</div>
+				<div id="KLDistance">KL Distance</div>
+				<div id="CosineSimilarity">CosineSimilarity</div>
+			</div>
+		</div>
+		<div id="footer">
+			<ul>
+        	<li class="float-left"><a href="">HELP</a></li>
+          <li class="float-left"><a href="">TERMS</a></li>
+          <li class="float-left"><a href="">PRIVACY</a></li>
+          <li class="float-left"><a href="">API</a></li>
+          <li class="float-right"><a href="">ABOUT</a></li>
+          <li class="float-right"><a href="">@2017WEBIS</a></li>
+        </ul>
+		</div>
+	</div>
+
+<script>
+
+	var cityData = [[1, 9, 1, 6, 2],
+			[1, 2, 10, 4, 1],
+			[2, 4, 2, 1, 5],
+			[9, 1, 10, 7, 2],
+			[10, 3, 5, 7, 1],
+			[5, 5, 3, 1, 2]]
+	var labels = [
+	    'Arg1',
+	    'Arg2',
+	    'Arg3',
+			'Arg4',
+	    'Arg5',
+	    'Arg6'];
+
+	var cityPositions = numeric.transpose(mds.classic(cityData));
+	console.log(mds.classic(cityData));
+	console.log(cityPositions);
+	var w = Math.min(600, document.documentElement.clientWidth - 20),
+	    h = w /2;
+	mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
+	    cityPositions[0],
+	    cityPositions[1],
+	    labels,
+	    {
+	        w :  Math.min(600, document.documentElement.clientWidth - 20),
+	        h : w /2,
+	        padding : 37,
+	        reverseX : true,
+	        reverseY : true,
+	    });
+
+	var cityPositions = numeric.transpose(mds.KL(cityData));
+	console.log(cityPositions);
+	var w = Math.min(600, document.documentElement.clientWidth - 20),
+			h = w /2;
+	mds.drawD3ScatterPlot(d3.select("#KLDistance"),
+			cityPositions[0],
+			cityPositions[1],
+			labels,
+			{
+					w :  Math.min(600, document.documentElement.clientWidth -20),
+					h : w /2,
+					padding : 37,
+					reverseX : true,
+					reverseY : true,
+			});
+
+		var cityPositions = numeric.transpose(mds.Cosin(cityData));
+		console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+
+	</script>
+
+</body>
+</html>
