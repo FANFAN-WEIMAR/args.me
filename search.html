@@ -8,7 +8,9 @@
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+ <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
 <script src="js/mds.js"></script>
+<script src="js/barycentric.js"></script>
 
 <script type="text/javascript">
 
@@ -16,6 +18,7 @@
 		var queryString=window.location.search.replace(/^\?/,'');
 		searchText.placeholder=queryString;
 		search(queryString);
+    check();
 	}
 
 	function searchQuery(){
@@ -83,6 +86,15 @@
 				<div id="euclideanDistance">Euclidean Distance</div>
 				<div id="KLDistance">KL Distance</div>
 				<div id="CosineSimilarity">CosineSimilarity</div>
+				<div id="polygon">polygon</div>
+				<form id="checkbox">
+						<input  type="checkbox" name="topics" value="topic1" checked="checked" onclick="check()"/>topic1
+						<input  type="checkbox" name="topics" value="topic2" checked="checked" onclick="check()"/>topic2
+						<input  type="checkbox" name="topics" value="topic3" checked="checked" onclick="check()"/>topic3
+						<input  type="checkbox" name="topics" value="topic4" checked="checked" onclick="check()"/>topic4
+						<input  type="checkbox" name="topics" value="topic5" checked="checked" onclick="check()"/>topic5
+						<input  type="checkbox" name="topics" value="topic6" checked="checked" onclick="check()"/>topic6
+				</form>
 			</div>
 		</div>
 		<div id="footer">
@@ -98,71 +110,135 @@
 	</div>
 
 <script>
+  function check(){
 
-	var cityData = [[1, 9, 1, 6, 2],
-			[1, 2, 10, 4, 1],
-			[2, 4, 2, 1, 5],
-			[9, 1, 10, 7, 2],
-			[10, 3, 5, 7, 1],
-			[5, 5, 3, 1, 2]]
-	var labels = [
-	    'Arg1',
-	    'Arg2',
-	    'Arg3',
-			'Arg4',
-	    'Arg5',
-	    'Arg6'];
+    var Polygon=document.getElementById('polygon');
+
+    while(Polygon.firstChild){
+      Polygon.removeChild(Polygon.firstChild);
+    }
+
+
+    //console.log(cityData);
+    var col=cityData[0].length;
+    var row=cityData.length;
+
+    var checkedTopics=[];
+    var topics=document.getElementsByName('topics');
+      for(var i=0;i<topics.length;i++){
+        if(topics[i].checked){
+          checkedTopics.push(i);
+        }
+      }
+    //console.log(checkedTopics);
+
+    var processedData=[];
+    var processedLabel=[];
+    for(var i=0;i<row;i++){
+      processedData[i]=new Array(checkedTopics.length);
+    }
+
+    for (var a=0;a<row;a++){
+      for (var b=0;b<checkedTopics.length;b++){
+        processedData[a][b]=cityData[a][checkedTopics[b]];
+      }
+    }
+    //console.log(processedData);
+
+    var emptySample=[];
+    for(var i=0;i<checkedTopics.length;i++){
+      emptySample[i]=0;
+    }
+    //console.log(emptySample);
+
+    // var index=processedData.indexOf(emptySample);
+    // console.log(index);
+    //processedData.splice(processedData.indexOf(emptySample),1);
+    // var processedDataWithoutNull=[];
+    // for(var a=0;a<processedData.length;a++){
+    //   if(processedData[a]!=emptySample){
+    //     processedDataWithoutNull.push(processedData[a]);
+    //   }
+    // }
+    // console.log(processedDataWithoutNull);
+
+    for(var a=0;a<checkedTopics.length;a++){
+      processedLabel[a]=labels[checkedTopics[a]]
+    }
+
+    var verticesNumber=processedLabel.length;
+		polygon(processedData,d3.select('#polygon'),150,verticesNumber,processedLabel);
+
+
+  }
+</script>
+<script>
+
+var cityData = [[16, 1, 1, 1, 1, 1],
+    [1, 10, 1, 1, 1, 1],
+    [1, 1, 1, 9, 1, 1],
+    [1, 1, 1, 1, 8, 8],
+    [0, 0, 1, 0, 16, 0],
+    [1, 1, 1, 1, 1, 1]]
+var labels = [
+    'topic1',
+    'topic2',
+    'topic3',
+    'topic4',
+    'topic5',
+    'topic6'];
+  console.log(cityData);
 
 	var cityPositions = numeric.transpose(mds.classic(cityData));
-	console.log(mds.classic(cityData));
-	console.log(cityPositions);
-	var w = Math.min(600, document.documentElement.clientWidth - 20),
-	    h = w /2;
-	mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
-	    cityPositions[0],
-	    cityPositions[1],
-	    labels,
-	    {
-	        w :  Math.min(600, document.documentElement.clientWidth - 20),
-	        h : w /2,
-	        padding : 37,
-	        reverseX : true,
-	        reverseY : true,
-	    });
+	//console.log(mds.classic(cityData));
+	//console.log(cityPositions);
+	// var w = Math.min(600, document.documentElement.clientWidth - 20),
+	//     h = w /2;
+	// mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
+	//     cityPositions[0],
+	//     cityPositions[1],
+	//     labels,
+	//     {
+	//         w :  Math.min(600, document.documentElement.clientWidth - 20),
+	//         h : w /2,
+	//         padding : 37,
+	//         reverseX : true,
+	//         reverseY : true,
+	//     });
+  //
+	// var cityPositions = numeric.transpose(mds.KL(cityData));
+	// //console.log(cityPositions);
+	// var w = Math.min(600, document.documentElement.clientWidth - 20),
+	// 		h = w /2;
+	// mds.drawD3ScatterPlot(d3.select("#KLDistance"),
+	// 		cityPositions[0],
+	// 		cityPositions[1],
+	// 		labels,
+	// 		{
+	// 				w :  Math.min(600, document.documentElement.clientWidth -20),
+	// 				h : w /2,
+	// 				padding : 37,
+	// 				reverseX : true,
+	// 				reverseY : true,
+	// 		});
+  //
+	// 	var cityPositions = numeric.transpose(mds.Cosin(cityData));
+	// 	//console.log(cityPositions);
+	// 	var w = Math.min(600, document.documentElement.clientWidth - 20),
+	// 			h = w /2;
+	// 	mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
+	// 			cityPositions[0],
+	// 			cityPositions[1],
+	// 			labels,
+	// 			{
+	// 					w :  Math.min(600, document.documentElement.clientWidth -20),
+	// 					h : w /2,
+	// 					padding : 37,
+	// 					reverseX : true,
+	// 					reverseY : true,
+	// 			});
+	// </script>
 
-	var cityPositions = numeric.transpose(mds.KL(cityData));
-	console.log(cityPositions);
-	var w = Math.min(600, document.documentElement.clientWidth - 20),
-			h = w /2;
-	mds.drawD3ScatterPlot(d3.select("#KLDistance"),
-			cityPositions[0],
-			cityPositions[1],
-			labels,
-			{
-					w :  Math.min(600, document.documentElement.clientWidth -20),
-					h : w /2,
-					padding : 37,
-					reverseX : true,
-					reverseY : true,
-			});
-
-		var cityPositions = numeric.transpose(mds.Cosin(cityData));
-		console.log(cityPositions);
-		var w = Math.min(600, document.documentElement.clientWidth - 20),
-				h = w /2;
-		mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
-				cityPositions[0],
-				cityPositions[1],
-				labels,
-				{
-						w :  Math.min(600, document.documentElement.clientWidth -20),
-						h : w /2,
-						padding : 37,
-						reverseX : true,
-						reverseY : true,
-				});
-
-	</script>
 
 </body>
 </html>

@@ -41,7 +41,6 @@ html,body{
 
 }
 
-
 .SearchContainer{
 		height: 10%;
   	position: absolute;
@@ -117,7 +116,7 @@ html,body{
 
 #resultDisplay{
 	position: absolute;
-  top: 100;
+  top: 250px;
   transform: translate(-50%, -50%);
 	width: 100%;
 	}
@@ -151,4 +150,17 @@ html,body{
 	top:400px;
 	width: 600px;
 	left:900px;
+}
+#polygon{
+	position: absolute;
+	top:400px;
+	width: 600px;
+	left:1800px;
+}
+
+#checkbox{
+	position: absolute;
+	top:700px;
+	width: 600px;
+	left:1800px;
 }

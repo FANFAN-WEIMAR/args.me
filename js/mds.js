@@ -25,7 +25,7 @@
           }
         }
 
-        console.log(distances);
+        //console.log(distances);
 
         var M = numeric.mul(-0.5, distances);
 
@@ -43,7 +43,7 @@
                 M[i][j] += totalMean - rowMeans[i] - colMeans[j];
             }
         }
-        console.log(M);
+        //console.log(M);
 
         // take the SVD of the double centred matrix, and return the
         // points from it
@@ -132,7 +132,7 @@
                 //distanceValue=distanceValue+data[a][k]*Math.log(data[a][k]/data[b][k])+data[b][k]*Math.log(data[b][k]/data[a][k]);
                 valueA=valueA+data[a][k]*data[a][k];
                 valueB=valueB+data[b][k]*data[b][k];
-                distanceValue=distanceValue+data[a][k]*data[b][k];
+                distanceValue=distanceValue-data[a][k]*data[b][k];
             }
                 valueA=Math.sqrt(valueA);
                 valueB=Math.sqrt(valueB);
@@ -238,5 +238,9 @@
             .text(function(d) { return d; })
             .attr("x", function(d, i) { return xScale(xPos[i]); })
             .attr("y", function(d, i) { return yScale(yPos[i]) - 2 *pointRadius; });
-    };
+        };
+
+
+
+
 }(window.mds = window.mds || {}));
