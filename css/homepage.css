@@ -109,23 +109,3 @@ html,body{
 	margin:20px;
 	text-decoration: none;
 }
-
-#resultDisplay{
-	position: absolute;
-  	top: 43%;
-  	left: 48%;
-  	transform: translate(-50%, -50%);
-	width: 70%;
-	}
-#Pro{
-	position:absolute;
-	top:43%;
-	left:10%;
-	color:#0C6;
-}
-#Con{
-	position:absolute;
-	top:43%;
-	left:70%;
-	color:#C90;
-}

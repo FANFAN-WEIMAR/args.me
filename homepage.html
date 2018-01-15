@@ -34,7 +34,7 @@
 
 	function search(){
 		var searchValue=document.getElementById('searchText').value;
-		window.location="./search.html?"+searchValue;
+		window.location="./search.html?q="+searchValue;
 	}
 </script>
 
@@ -48,9 +48,6 @@
 			<div class="SearchContainer">
 					<input id="searchText" type="text" class="searchTerm" placeholder="Search..." onmousedown="active()" onblur="inactive()" />
 					<button type="submit" class="searchButton" onclick="search()"/>Go!</button>
-			</div>
-			<div id="resultDisplay">
-				<div id="Pro"></div><div id="Con"></div>
 			</div>
 		</div>
 		<div id="footer">

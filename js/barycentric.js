@@ -134,7 +134,7 @@
           .attr("width", radius*3)
           .attr("height",radius*3);
       var g = svg.append('g')
-          .attr('transform', "translate(" + radius + " " + radius + ")");
+          .attr('transform', "translate(" + radius*1.5 + " " + radius*1.5 + ")");
 
       var circles=data.concat(argumentWeight);
       //console.log(circles);
@@ -143,16 +143,30 @@
             .data(circles)
             .enter()
             .append('svg:circle')
-            .attr('r',3)
+            .attr('r',function(d){
+              if(i>=data.length){
+                return 5
+              }else{
+                return 3
+              }
+            })
             .attr('cx',function(d){return d.x;})
             .attr('cy',function(d){return d.y;})
+            .attr('fill',function(d,i){
+              //return 'green';
+              if(i>=data.length){
+                return 'green'
+              }else{
+                return 'black'
+              }
+            })
             .attr('opacity',1);
 
       var lable=g.selectAll('text')
             .data(data)
             .enter()
             .append('text')
-            .attr("text-anchor", "right")
+            .attr("text-anchor", "middle")
             .attr('x',function(d){return d.x;})
             .attr('y',function(d){return d.y;})
             .text(function(d){return d.label;});
@@ -165,7 +179,7 @@
             .attr('y1',function(d){return d.py;})
             .attr('x2',function(d){return d.x;})
             .attr('y2',function(d){return d.y;})
-            .attr('stroke','black')
+            .attr('stroke','gray')
             .attr('stroke-width',2);
 
 

@@ -8,22 +8,32 @@
 <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
- <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
 <script src="js/mds.js"></script>
 <script src="js/barycentric.js"></script>
 
 <script type="text/javascript">
 
 	window.onload=function(){
-		var queryString=window.location.search.replace(/^\?/,'');
+		var queryString=window.location.search.replace(/^\?q=/,'');
+    var queryString=queryString.split("&",1);
 		searchText.placeholder=queryString;
-		search(queryString);
-    check();
+		tabOpenBarycentric();
+
+		//tabOpenProCon();
+		//search(queryString);
+    //check();
 	}
 
 	function searchQuery(){
+
 		var searchValue=document.getElementById('searchText').value;
-		window.location="./search.html?"+searchValue;
+    if(searchValue==""){
+      var searchValue=window.location.search.replace(/^\?q=/,'');
+      var searchValue=searchValue.split("&",1);
+    }
+    // var view=window.location.search.split("&v=").pop();
+		// window.location="./search.html?q="+searchValue+"&v="+view;
 		search(searchValue);
 	}
 
@@ -33,7 +43,7 @@
 			var length=data.results.length;
 			var conclusion;
 			var stance;
-			var div=document.getElementById('resultDisplay');
+			var div=document.getElementById('ProVsCon');
 			var divPro=document.getElementById('Pro');
 			var divCon=document.getElementById('Con');
 
@@ -62,10 +72,308 @@
 			}
 		})
 	}
-	function remove(id){
-		var element =document.getElementById('id');
-		element.parentNode.removeChild(element);
+</script>
+
+<script type="text/javascript">
+
+	d3.text("topic_dist_per_doc.txt",function(data){
+
+		//console.log(data);
+		var argumentData=[];
+		var data=data.split(/[[\]]/);
+		for(var i=0;i<data.length;i++){
+			if(isNaN(data[i])){
+				data[i]=data[i].replace(/,/g,"");
+				data[i]=data[i].split(/[(\)]/).filter(clean);
+				argumentData.push(data[i]);
+			}
+		}
+		console.log(argumentData);
+		for(var i=0;i<argumentData.length;i++){
+			for(var j=0;j<argumentData[i].length;j++){
+				var cell=argumentData[i][j].split(" ");
+				var topicID=cell[0];
+				var freq=cell[1];
+
+				var newCell = {};
+				newCell.topicID = topicID;
+				newCell.freq = freq;
+				argumentData[i][j]=newCell;
+
+			}
+		}
+		console.log(argumentData);
+
+		var topicsNum=getTopicsNum();
+		//console.log(topicsNum);
+
+		var labels=setLabel(topicsNum);
+		console.log(labels);
+
+		function setLabel(num){
+			var labels=[];
+			for(i=0;i<num;i++){
+				labels[i]="topic"+i;
+			}
+			return labels;
+		}
+
+
+
+		function getTopicsNum(){
+			var arrayTopic=[]
+			for(var i=0;i<argumentData.length;i++){
+				for(var j=0;j<argumentData[i].length;j++){
+					arrayTopic.push(argumentData[i][j].topicID);
+				}
+			}
+			return Math.max.apply(null, arrayTopic);
+		}
+
+
+		function clean(value){
+			if(isNaN(value)){
+				return true;
+			}
+		}
+	});
+
+	var cityData = [[16, 1, 1, 1, 1, 1],
+			[1, 10, 1, 1, 1, 1],
+			[1, 1, 1, 9, 1, 1],
+			[1, 1, 1, 1, 8, 8],
+			[1, 2, 2, 16, 16, 6],
+			[1, 1, 1, 1, 1, 1]]
+	var labels = [
+			'topic1',
+			'topic2',
+			'topic3',
+			'topic4',
+			'topic5',
+			'topic6'];
+	console.log(labels);
+
+</script>
+
+<script type="text/javascript">
+
+	function euclidean(){
+		var cityPositions = numeric.transpose(mds.classic(cityData));
+		// console.log(mds.classic(cityData));
+		// console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth - 20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
 	}
+	function KL(){
+		var cityPositions = numeric.transpose(mds.KL(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#KLDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+	function Cosin(){
+		var cityPositions = numeric.transpose(mds.Cosin(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+
+
+</script>
+
+<script type="text/javascript">
+  function check(){
+
+    var Polygon=document.getElementById('polygon');
+
+    while(Polygon.firstChild){
+      Polygon.removeChild(Polygon.firstChild);
+    }
+
+    var col=cityData[0].length;
+    var row=cityData.length;
+
+    var checkedTopics=[];
+    var topics=document.getElementsByName('topic');
+      for(var i=0;i<topics.length;i++){
+        if(topics[i].checked){
+          checkedTopics.push(i);
+        }
+      }
+    //console.log(checkedTopics);
+
+    var processedData=[];
+    var processedLabel=[];
+    for(var i=0;i<row;i++){
+      processedData[i]=new Array(checkedTopics.length);
+    }
+		//console.log(processedData);
+
+    for (var a=0;a<row;a++){
+      for (var b=0;b<checkedTopics.length;b++){
+        var n=checkedTopics[b];
+        processedData[a][b]=cityData[a][n];
+      }
+    }
+    //console.log(cityData);
+    //console.log(processedData[1]);
+    //console.log(processedData);
+
+    // var emptySample=[];
+    // for(var i=0;i<checkedTopics.length;i++){
+    //   emptySample[i]=0;
+    // }
+    // console.log(emptySample);
+
+    // var index=processedData.indexOf(emptySample);
+    // console.log(index);
+    // processedData.splice(processedData.indexOf(emptySample),1);
+    // var processedDataWithoutNull=[];
+    // for(var a=0;a<processedData.length;a++){
+    //   if(processedData[a]!=emptySample){
+    //     processedDataWithoutNull.push(processedData[a]);
+    //   }
+    // }
+    // console.log(processedDataWithoutNull);
+
+    for(var a=0;a<checkedTopics.length;a++){
+      processedLabel[a]=labels[checkedTopics[a]]
+    }
+    var verticesNumber=processedLabel.length;
+
+		polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
+  }
+
+</script>
+
+<script type="text/javascript">
+
+	function clear(){
+		var item=document.getElementById('resultDisplay');
+		while(item.firstChild){
+			item.removeChild(item.firstChild);
+		}
+	}
+
+  function tabOpenProCon(){
+
+		clear();
+    var ProVsCon=document.createElement("div");
+    document.getElementById("resultDisplay").appendChild(ProVsCon);
+		ProVsCon.setAttribute("id","ProVsCon");
+
+		var Pro=document.createElement("div");
+		document.getElementById("ProVsCon").appendChild(Pro);
+		Pro.setAttribute("id","Pro");
+
+		var Con=document.createElement("div");
+		document.getElementById("ProVsCon").appendChild(Con);
+		Con.setAttribute("id","Con");
+
+    searchQuery()
+
+  }
+  function tabOpenMds(){
+
+		clear();
+		var mds=document.createElement("div");
+		document.getElementById("resultDisplay").appendChild(mds);
+		mds.setAttribute("id","mds");
+
+		var euclideanDistance=document.createElement("div");
+    document.getElementById("mds").appendChild(euclideanDistance);
+		euclideanDistance.setAttribute("id","euclideanDistance");
+
+		var KLDistance=document.createElement("div");
+    document.getElementById("mds").appendChild(KLDistance);
+		KLDistance.setAttribute("id","KLDistance");
+
+		var CosineSimilarity=document.createElement("div");
+    document.getElementById("mds").appendChild(CosineSimilarity);
+		CosineSimilarity.setAttribute("id","CosineSimilarity");
+
+		euclidean();
+		KL();
+		Cosin();
+    // var searchValue=window.location.search.replace(/^\?q=/,'');
+    // var searchValue=searchValue.split("&",1);
+    //window.location="./search.html?q="+searchValue+"&v=mds";
+ }
+
+ function tabOpenBarycentric(){
+
+	 clear();
+
+	 var barycentric=document.createElement("div");
+	 document.getElementById("resultDisplay").appendChild(barycentric);
+	 barycentric.setAttribute("id","barycentric");
+
+	 var polygon=document.createElement("div");
+	 document.getElementById("barycentric").appendChild(polygon);
+	 polygon.setAttribute("id","polygon");
+
+	 var checkbox=document.createElement("div");
+	 document.getElementById("barycentric").appendChild(checkbox);
+	 checkbox.setAttribute("id","checkbox");
+
+
+
+	 for(var i=0;i<labels.length;i++){
+	 	var subCheckbox=document.createElement("input");
+		subCheckbox.type="checkbox";
+		subCheckbox.class="checkbox"
+		subCheckbox.name="topic";
+		subCheckbox.value="topic"+i;
+		subCheckbox.id="id"+i;
+		subCheckbox.class="box";
+		subCheckbox.checked="checked";
+		subCheckbox.onclick=check;
+   	document.getElementById("checkbox").appendChild(subCheckbox);
+
+		var label=document.createElement("label");
+		label.htmlFor="id"+i
+ 	  label.appendChild(document.createTextNode(labels[i]));
+		document.getElementById("checkbox").appendChild(label);
+ 	 	//checkbox.setAttribute("id","checkbox");
+	 }
+	 	check();
+
+   // var searchValue=window.location.search.replace(/^\?q=/,'');
+   // var searchValue=searchValue.split("&",1);
+   //window.location="./search.html?q="+searchValue+"&v=barycentric";
+}
 </script>
 
 </head>
@@ -81,21 +389,16 @@
 		</div>
 		<div id="body">
 
-			<div id="resultDisplay">
-				<div id="Pro"></div><div id="Con"></div>
-				<div id="euclideanDistance">Euclidean Distance</div>
-				<div id="KLDistance">KL Distance</div>
-				<div id="CosineSimilarity">CosineSimilarity</div>
-				<div id="polygon">polygon</div>
-				<form id="checkbox">
-						<input  type="checkbox" name="topics" value="topic1" checked="checked" onclick="check()"/>topic1
-						<input  type="checkbox" name="topics" value="topic2" checked="checked" onclick="check()"/>topic2
-						<input  type="checkbox" name="topics" value="topic3" checked="checked" onclick="check()"/>topic3
-						<input  type="checkbox" name="topics" value="topic4" checked="checked" onclick="check()"/>topic4
-						<input  type="checkbox" name="topics" value="topic5" checked="checked" onclick="check()"/>topic5
-						<input  type="checkbox" name="topics" value="topic6" checked="checked" onclick="check()"/>topic6
-				</form>
-			</div>
+      <div id="tab">
+        <ul>
+          <li class="tablinks" onclick="tabOpenProCon()">Pro Vs. Con</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenMds()">MDS</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenBarycentric()">barycentric </li>
+        </ul>
+      </div>
+			<div id="resultDisplay"></div>
 		</div>
 		<div id="footer">
 			<ul>
@@ -109,135 +412,11 @@
 		</div>
 	</div>
 
-<script>
-  function check(){
-
-    var Polygon=document.getElementById('polygon');
-
-    while(Polygon.firstChild){
-      Polygon.removeChild(Polygon.firstChild);
-    }
 
 
-    //console.log(cityData);
-    var col=cityData[0].length;
-    var row=cityData.length;
-
-    var checkedTopics=[];
-    var topics=document.getElementsByName('topics');
-      for(var i=0;i<topics.length;i++){
-        if(topics[i].checked){
-          checkedTopics.push(i);
-        }
-      }
-    //console.log(checkedTopics);
-
-    var processedData=[];
-    var processedLabel=[];
-    for(var i=0;i<row;i++){
-      processedData[i]=new Array(checkedTopics.length);
-    }
-
-    for (var a=0;a<row;a++){
-      for (var b=0;b<checkedTopics.length;b++){
-        processedData[a][b]=cityData[a][checkedTopics[b]];
-      }
-    }
-    //console.log(processedData);
-
-    var emptySample=[];
-    for(var i=0;i<checkedTopics.length;i++){
-      emptySample[i]=0;
-    }
-    //console.log(emptySample);
-
-    // var index=processedData.indexOf(emptySample);
-    // console.log(index);
-    //processedData.splice(processedData.indexOf(emptySample),1);
-    // var processedDataWithoutNull=[];
-    // for(var a=0;a<processedData.length;a++){
-    //   if(processedData[a]!=emptySample){
-    //     processedDataWithoutNull.push(processedData[a]);
-    //   }
-    // }
-    // console.log(processedDataWithoutNull);
-
-    for(var a=0;a<checkedTopics.length;a++){
-      processedLabel[a]=labels[checkedTopics[a]]
-    }
-
-    var verticesNumber=processedLabel.length;
-		polygon(processedData,d3.select('#polygon'),150,verticesNumber,processedLabel);
 
 
-  }
-</script>
-<script>
 
-var cityData = [[16, 1, 1, 1, 1, 1],
-    [1, 10, 1, 1, 1, 1],
-    [1, 1, 1, 9, 1, 1],
-    [1, 1, 1, 1, 8, 8],
-    [0, 0, 1, 0, 16, 0],
-    [1, 1, 1, 1, 1, 1]]
-var labels = [
-    'topic1',
-    'topic2',
-    'topic3',
-    'topic4',
-    'topic5',
-    'topic6'];
-  console.log(cityData);
-
-	var cityPositions = numeric.transpose(mds.classic(cityData));
-	//console.log(mds.classic(cityData));
-	//console.log(cityPositions);
-	// var w = Math.min(600, document.documentElement.clientWidth - 20),
-	//     h = w /2;
-	// mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
-	//     cityPositions[0],
-	//     cityPositions[1],
-	//     labels,
-	//     {
-	//         w :  Math.min(600, document.documentElement.clientWidth - 20),
-	//         h : w /2,
-	//         padding : 37,
-	//         reverseX : true,
-	//         reverseY : true,
-	//     });
-  //
-	// var cityPositions = numeric.transpose(mds.KL(cityData));
-	// //console.log(cityPositions);
-	// var w = Math.min(600, document.documentElement.clientWidth - 20),
-	// 		h = w /2;
-	// mds.drawD3ScatterPlot(d3.select("#KLDistance"),
-	// 		cityPositions[0],
-	// 		cityPositions[1],
-	// 		labels,
-	// 		{
-	// 				w :  Math.min(600, document.documentElement.clientWidth -20),
-	// 				h : w /2,
-	// 				padding : 37,
-	// 				reverseX : true,
-	// 				reverseY : true,
-	// 		});
-  //
-	// 	var cityPositions = numeric.transpose(mds.Cosin(cityData));
-	// 	//console.log(cityPositions);
-	// 	var w = Math.min(600, document.documentElement.clientWidth - 20),
-	// 			h = w /2;
-	// 	mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
-	// 			cityPositions[0],
-	// 			cityPositions[1],
-	// 			labels,
-	// 			{
-	// 					w :  Math.min(600, document.documentElement.clientWidth -20),
-	// 					h : w /2,
-	// 					padding : 37,
-	// 					reverseX : true,
-	// 					reverseY : true,
-	// 			});
-	// </script>
 
 
 </body>

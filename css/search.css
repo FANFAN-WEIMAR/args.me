@@ -13,15 +13,16 @@ html,body{
 }
 
 #header {
+	position:fixed;
 	padding: 10px;
 	color:#0C9;
   background: #ddd;
   width: 100%;
 	height: 80px;
+	z-index: 1000;
 	}
 
 #body{
-	padding: 10px;
 	padding-bottom: 60px;
 }
 
@@ -42,9 +43,9 @@ html,body{
 }
 
 .SearchContainer{
-		height: 10%;
+
   	position: absolute;
-  	top:65px;
+  	top:50px;
   	left:380px;
 		z-index:1000;
   	transform: translate(-50%, -50%);
@@ -85,22 +86,15 @@ html,body{
 }
 
 
-#footer ul{
+#footer li{
 	display: inline;
-
 }
 .float-left{
 	float:left;
-	list-style-type:none;
-	display:inline-block;
-	padding:15px;
 }
 
 .float-right{
 	float:right;
-	list-style-type:none;
-	display:inline-block;
-	padding:15px;
 }
 .float-left a{
 	color:#CCC;
@@ -114,53 +108,97 @@ html,body{
 	text-decoration: none;
 }
 
+#tab{
+	position: fixed;
+	top:100px;
+	color: #C90;
+	z-index:1000;
+	width: 100%;
+	background-color: #eee;
+
+}
+
+
+#tab li{
+	display: inline;
+	cursor: pointer;
+}
+
+.tablinks{
+	margin:20px;
+	text-decoration: none;
+}
+
 #resultDisplay{
 	position: absolute;
   top: 250px;
-  transform: translate(-50%, -50%);
+
 	width: 100%;
 	}
+
+#ProVsCon{
+	position:relative;
+}
+
 #Pro{
 	position:absolute;
-	top:750px;
-	left:1000px;
+	left:30%;
 	width: 500px;
 	color:#0C6;
 }
 #Con{
 	position:absolute;
-	top:750px;
-	left:1700px;
+	left:60%;
 	width: 500px;
 	color:#C90;
 }
+
+#mds{
+	position:relative;
+}
+
 #euclideanDistance{
 	position: absolute;
 	width: 600px;
-	left:900px;
+	left:300px;
 }
 
 #KLDistance{
 	position: absolute;
 	width: 600px;
-	left:1550px;
+	left:1000px;
 }
 #CosineSimilarity{
 	position: absolute;
 	top:400px;
 	width: 600px;
-	left:900px;
+	left:300px;
 }
+#barycentric{
+	position: fixed;
+}
+
 #polygon{
-	position: absolute;
-	top:400px;
-	width: 600px;
-	left:1800px;
+	position:fixed;
+	top:150px;
+	left: 500px;
 }
 
 #checkbox{
-	position: absolute;
-	top:700px;
-	width: 600px;
-	left:1800px;
+	position:fixed;
+	left:550px;
+	top: 200px;
+}
+
+input[type=checkbox]+label {
+	padding-right: 20px;
+	border-radius: 1px;
+	color:#ccc;
+}
+
+
+input[type=checkbox]:checked+label{
+	padding-right: 20px;
+	border-radius: 1px;
+	color: #000;
 }
