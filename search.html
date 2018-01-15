@@ -78,7 +78,7 @@
 
 	d3.text("topic_dist_per_doc.txt",function(data){
 
-		//console.log(data);
+		//get the LDA model data
 		var argumentData=[];
 		var data=data.split(/[[\]]/);
 		for(var i=0;i<data.length;i++){
@@ -110,6 +110,7 @@
 		var labels=setLabel(topicsNum);
 		console.log(labels);
 
+
 		function setLabel(num){
 			var labels=[];
 			for(i=0;i<num;i++){
@@ -117,8 +118,6 @@
 			}
 			return labels;
 		}
-
-
 
 		function getTopicsNum(){
 			var arrayTopic=[]
