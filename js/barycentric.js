@@ -1,7 +1,7 @@
 (function(barycentric) {
 
     polygon = function(rowData,element,radius,verticesNumber,labels){
-
+      //console.log(rowData);
       var col=rowData[0].length;
       var row=rowData.length;
 
@@ -19,12 +19,13 @@
           vertices.push({
             x:x,y:y,
             px:px,py:py,
-            label:labels[i]
+            label:labels[i],
+            overlap:1
           })
         }
          return vertices;
       })();
-      //console.log(data);
+      console.log(data);
 
       //normalize the topic distribution
 
@@ -45,88 +46,107 @@
         }
       }
       //console.log(rowData);
-
-      // set value for lables
-      var topics=[];
-      for (var i=0;i<row;i++){
-        topics[i]=new Array(col);
-      }
-
-      for(var a=0;a<row;a++){
-        for(var k=0;k<col;k++){
-          if(a==k){
-            topics[a][k]=1
-          }else {
-            topics[a][k]=0;
-          }
-        }
-      }
-      //console.log(topics);
-
-      //compare vectors function
-      function checkArrays(arrA,arrB){
-        for(var i=0;i<arrA.length;i++){
-          if(arrA[i]!==arrB[i])
-          return false;
-        }
-        return true;
-      }
-      //calculate the weights of each argument
-      var weights=[];
-      for(var i=0;i<row;i++){
-        weights[i]=new Array(col);
-      }
-
-      var a,b,c;
-      for (var i=0;i<row;i++){
-        var weightSum=0;
-        for (var j=0;j<verticesNumber;j++){
-
-          if(checkArrays(rowData[i],topics[j])){
-            weights[i]=rowData[i];
-            weightSum=1.0;
-          }else {
-            a=j-1;
-            b=j;
-            c=j+1;
-
-            if(a<0){
-              a=verticesNumber-1;
-            }
-            if(c==verticesNumber){
-              c=0;
-            }
-
-
-            var prev=numeric.sub(topics[a],topics[b]);
-            var next=numeric.sub(topics[c],topics[b]);;
-            var current=numeric.sub(rowData[i],topics[b]);
-            var angle1=1/math.tan(math.acos(numeric.dot(prev,current)/(numeric.norm2(prev)*numeric.norm2(current))));
-            var angle2=1/math.tan(math.acos(numeric.dot(next,current)/(numeric.norm2(next)*numeric.norm2(current))));
-            var bottom=(numeric.norm2(current)*numeric.norm2(current));
-
-            weights[i][j]=(angle1+angle2)/bottom;
-            weightSum=weightSum+weights[i][j];
-          }
-        }
-        weights[i]=numeric.div(weights[i],weightSum);
-      }
+      // calculate the weights
+      // var topics=[];
+      // for (var i=0;i<col;i++){
+      //   topics[i]=new Array(col);
+      // }
+      //
+      // for(var a=0;a<col;a++){
+      //   for(var k=0;k<col;k++){
+      //     if(a==k){
+      //       topics[a][k]=1
+      //     }else {
+      //       topics[a][k]=0;
+      //     }
+      //   }
+      // }
+      //
+      // var weights=[];
+      // for(var i=0;i<row;i++){
+      //   weights[i]=new Array(col);
+      // }
+      //
+      // var a,b,c;
+      // for (var i=0;i<row;i++){
+      //   var weightSum=0;
+      //   for (var j=0;j<verticesNumber;j++){
+      //
+      //     // if(checkArrays(rowData[i],topics[j])){
+      //     //   weights[i]=rowData[i];
+      //     //   weightSum=1.0;
+      //     // }else {
+      //       a=j-1;
+      //       b=j;
+      //       c=j+1;
+      //       if(a<0){
+      //         a=verticesNumber-1;
+      //       }
+      //       if(c==verticesNumber){
+      //         c=0;
+      //       }
+      //       var prev=numeric.sub(topics[a],topics[b]);
+      //       var next=numeric.sub(topics[c],topics[b]);
+      //       var current=numeric.sub(rowData[i],topics[b]);
+      //       var angle1=1/math.tan(math.acos(numeric.dot(prev,current)/(numeric.norm2(prev)*numeric.norm2(current))));
+      //       var angle2=1/math.tan(math.acos(numeric.dot(next,current)/(numeric.norm2(next)*numeric.norm2(current))));
+      //       var bottom=(numeric.norm2(current)*numeric.norm2(current));
+      //
+      //       weights[i][j]=(angle1+angle2)/bottom;
+      //       weightSum=weightSum+weights[i][j];
+      //   //  }
+      //   }
+      //   weights[i]=numeric.div(weights[i],weightSum);
+      // }
       //console.log(weights);
 
       // calculate the x and y value in cartesian coordinates
+      console.log(rowData);
       var argumentWeight=[];
       for(var a=0;a<row;a++){
         var xValue=0,yValue=0;
+        var overlap=0;
+        var maxIndex=0;
+        var maxValue=0;
+        var px=0;
+        var py=0;
+
         for(var b=0;b<col;b++){
-          xValue=xValue+weights[a][b]*data[b].x;
-          yValue=yValue+weights[a][b]*data[b].y;
+          xValue=xValue+rowData[a][b]*data[b].x;
+          yValue=yValue+rowData[a][b]*data[b].y;
+
+          if(maxValue<rowData[a][b]){
+            maxValue = rowData[a][b];
+            maxIndex = b;
+          }
         }
         argumentWeight.push({
           x:xValue,
           y:yValue,
+          px:data[maxIndex].x,
+          py:data[maxIndex].y,
+          overlap:overlap
         })
       }
-      //console.log(argumentWeight);
+      console.log(argumentWeight);
+
+      for(var a=0;a<row;a++){
+        for(var b=0;b<row;b++){
+          if(a!=b){
+            var equalCheck=_.isEqual(rowData[a],rowData[b])
+            if(equalCheck){
+              argumentWeight[a].overlap=argumentWeight[a].overlap+1;
+              argumentWeight[b].overlap=argumentWeight[b].overlap+1;
+            }
+          }
+        }
+      }
+
+      for(var a=0;a<row;a++){
+        argumentWeight[a].overlap=argumentWeight[a].overlap/2 +1;
+      }
+
+      console.log(argumentWeight);
 
 
       // draw the polygon
@@ -139,19 +159,31 @@
       var circles=data.concat(argumentWeight);
       //console.log(circles);
 
+      var defs = g.append("defs");
+
+      var arrowMarker = defs.append("marker")
+            .attr("id","arrow")
+            .attr("markerUnits","strokeWidth")
+            .attr("markerWidth","8")
+            .attr("markerHeight","8")
+            .attr("viewBox","0 0 13 13")
+            .attr("refX","5")
+            .attr("refY","5")
+            .attr("orient","90");
+
+      var arrow_path = "M2,2 L10,6 L2,10 L6,6 L2,2";
+
+      arrowMarker.append("path")
+            .attr("d",arrow_path)
+            .attr("fill","#A80");
+
       var nodes=g.selectAll('circle')
             .data(circles)
             .enter()
             .append('svg:circle')
-            .attr('r',function(d){
-              if(i>=data.length){
-                return 5
-              }else{
-                return 3
-              }
-            })
-            .attr('cx',function(d){return d.x;})
-            .attr('cy',function(d){return d.y;})
+            .attr('r',function(d){ return d.overlap*3; })
+            .attr('cx',function(d){return parseFloat(d.x);})
+            .attr('cy',function(d){return parseFloat(d.y);})
             .attr('fill',function(d,i){
               //return 'green';
               if(i>=data.length){
@@ -161,6 +193,23 @@
               }
             })
             .attr('opacity',1);
+
+      //var arrow=g.append('arrow')
+
+      // var marker=arrow.append('line')
+      //       .select('line')
+      //       .data(argumentWeight)
+      //       .enter()
+      //       .append('line')
+      //       .attr('x1',function(d){return d.px;})
+      //       .attr('y1',function(d){return d.py;})
+      //       .attr('x2',function(d){return d.x;})
+      //       .attr('y2',function(d){return d.y;})
+      //       .attr('stroke','yellow')
+      //       .attr('stroke-width',2)
+      //       .attr("marker-start","url(#arrow)");
+
+
 
       var lable=g.selectAll('text')
             .data(data)
