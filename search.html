@@ -32,12 +32,12 @@
 <script type="text/javascript">
 
 	var labels = [
-			'topic1',
-			'topic2',
-			'topic3',
-			'topic4',
-			'topic5',
-			'topic6'];
+			'Economy',
+			'Society',
+			'Education',
+			'Culture',
+			'Environment',
+			'Human Right'];
 
 </script>
 
@@ -165,7 +165,8 @@
 			var processedData=argumentAfterTopicSelection(checkedTopics,argumentData,topicsNum);
 			//console.log(processedData);
 			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-			//console.log(processedLabel);
+			console.log(processedLabel);
+
 
 
 			function getArgumentData(data){
@@ -203,11 +204,12 @@
 				return Math.max.apply(null, arrayTopic);
 			}
 			function setLabel(num){
-				var labels=[];
+				var labelsA=[];
 				for(i=0;i<num;i++){
-					labels[i]="topic"+(i);
+					//labelsA[i]="topic"+(i);
+					labelsA[i]=labels[i];
 				}
-				return labels;
+				return labelsA;
 			}
 			function topicsSelection(){
 				var checkedTopics=[];
@@ -238,7 +240,7 @@
 						}
 					}
 				}
-				console.log(freqArray);
+				//console.log(freqArray);
 
 				var col=freqArray[0].length;
 				var row=freqArray.length;
@@ -256,7 +258,7 @@
 						processedData[a][b]=m;
 					}
 				}
-				console.log(processedData);
+				//console.log(processedData);
 
 
 				return processedData;
@@ -320,7 +322,7 @@
 			var argumentData=getArgumentData(data);
 			var topicsNum=getTopicsNum(argumentData);
 			var processedData=getProcessedData(argumentData,topicsNum);
-			console.log(processedData);
+			//console.log(processedData);
 
 
 			function getArgumentData(data){
@@ -418,7 +420,7 @@
 			subCheckbox.type="checkbox";
 			subCheckbox.class="checkbox"
 			subCheckbox.name="topic";
-			subCheckbox.value="topic"+i;
+			subCheckbox.value=labels[i];
 			subCheckbox.id="id"+i;
 			subCheckbox.class="box";
 			subCheckbox.checked="checked";
@@ -426,7 +428,7 @@
 	   	document.getElementById("checkbox").appendChild(subCheckbox);
 
 			var label=document.createElement("label");
-			label.htmlFor="id"+i
+			label.htmlFor=labels[i];
 	 	  label.appendChild(document.createTextNode(labels[i]));
 			document.getElementById("checkbox").appendChild(label);
 	 	 	//checkbox.setAttribute("id","checkbox");

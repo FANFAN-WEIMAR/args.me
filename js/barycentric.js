@@ -25,7 +25,7 @@
         }
          return vertices;
       })();
-      console.log(data);
+      //console.log(data);
 
       //normalize the topic distribution
 
@@ -101,7 +101,7 @@
       //console.log(weights);
 
       // calculate the x and y value in cartesian coordinates
-      console.log(rowData);
+      //console.log(rowData);
       var argumentWeight=[];
       for(var a=0;a<row;a++){
         var xValue=0,yValue=0;
@@ -128,7 +128,7 @@
           overlap:overlap
         })
       }
-      console.log(argumentWeight);
+      //console.log(argumentWeight);
 
       for(var a=0;a<row;a++){
         for(var b=0;b<row;b++){
@@ -146,7 +146,7 @@
         argumentWeight[a].overlap=argumentWeight[a].overlap/2 +1;
       }
 
-      console.log(argumentWeight);
+      //console.log(argumentWeight);
 
 
       // draw the polygon
