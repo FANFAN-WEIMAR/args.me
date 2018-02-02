@@ -25,12 +25,16 @@ app.get('/', (req, res) => {
     res.sendFile('web/homepage.html', options);
 });
 
-app.get('/css/homepage.css', (req, res) => {
-  res.sendFile('web/css/homepage.css', options);
-});
-
 app.get('/search.html', (req, res) => {
   res.sendFile('web/search.html', options);
+});
+
+app.get('/topic_dist_per_doc.txt', (req, res) => {
+  res.sendFile('./topic_dist_per_doc.txt', options);
+});
+
+app.get('/css/homepage.css', (req, res) => {
+  res.sendFile('web/css/homepage.css', options);
 });
 
 app.get('/css/search.css', (req, res) => {
@@ -41,8 +45,12 @@ app.get('/js/mds.js', (req, res) => {
   res.sendFile('web/js/mds.js', options);
 });
 
-app.get('/js/homepage.js', (req, res) => {
-  res.sendFile('web/js/homepage.js', options);
+app.get('/js/barycentric.js', (req, res) => {
+  res.sendFile('web/js/barycentric.js', options);
+});
+
+app.get('/js/lodash.js', (req, res) => {
+  res.sendFile('web/js/lodash.js', options);
 });
 
 app.listen(port, () => {
