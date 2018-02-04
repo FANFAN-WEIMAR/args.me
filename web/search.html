@@ -131,37 +131,53 @@
 
 	function search(searchValue){
 		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + searchValue ;
-		$.getJSON(apiURL,function(data){
-			var length=data.results.length;
-			var conclusion;
-			var stance;
-			var div=document.getElementById('ProVsCon');
-			var divPro=document.getElementById('Pro');
-			var divCon=document.getElementById('Con');
+    var argumentList = [];
 
-			while(divPro.firstChild){
-				divPro.removeChild(divPro.firstChild);
-			}
-			while(divCon.firstChild){
-				divCon.removeChild(divCon.firstChild);
-			}
+    fetch(apiURL)
+      .then(res => res.json())
+      .then(function (data) {
+        console.log(data);
+        let args = data.results;
+        let regex =  /(debatepedia|debatewise|forandagainst|idebate|debate)\./g;
+        for(let arg of args) {
+          let portal =arg.url.match(regex)[0];
+          portal = portal.slice(0, -1);
+          let argID = portal
+                      + '-' + arg.discussionID
+                      + '-' + arg.argumentID;
+          argumentList.push(argID);
+        }
+        sendJSON(argumentList);
 
-			for(var i=0;i<length;i++){
-				conclusion=data.results[i].conclusion;
-				stance=data.results[i].stance;
-				if(stance==true){
-					var iDiv = document.createElement('div');
-					iDiv.innerHTML=conclusion;
-					div.appendChild(iDiv);
-					document.getElementById('Pro').appendChild(iDiv);
-				}else{
-					var iDiv = document.createElement('div');
-					iDiv.innerHTML=conclusion;
-					div.appendChild(iDiv);
-					document.getElementById('Con').appendChild(iDiv);
-				}
-			}
-		})
+        //FANFAN
+        var length = data.results.length;
+        var conclusion, stance;
+  			var div=document.getElementById('ProVsCon');
+  			var divPro=document.getElementById('Pro');
+  			var divCon=document.getElementById('Con');
+        while(divPro.firstChild){
+  				divPro.removeChild(divPro.firstChild);
+  			}
+  			while(divCon.firstChild){
+  				divCon.removeChild(divCon.firstChild);
+  			}
+
+  			for(var i=0;i<length;i++){
+  				conclusion=data.results[i].conclusion;
+  				stance=data.results[i].stance;
+  				if(stance==true){
+  					var iDiv = document.createElement('div');
+  					iDiv.innerHTML=conclusion;
+  					div.appendChild(iDiv);
+  					document.getElementById('Pro').appendChild(iDiv);
+  				}else{
+  					var iDiv = document.createElement('div');
+  					iDiv.innerHTML=conclusion;
+  					div.appendChild(iDiv);
+  					document.getElementById('Con').appendChild(iDiv);
+  				}
+  			}
+      });
 	}
 
   function polygonCheck(){
