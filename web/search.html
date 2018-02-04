@@ -111,7 +111,8 @@
 		search(searchValue);
 	}
 
-  function sendJSON(data) {
+  function sendJSON(data, callback) {
+    console.log('number of argument send: ' + data.length);
     var url = 'http://localhost:3000/';
     fetch(url, {
       method: 'POST',
@@ -121,8 +122,11 @@
       })
     })
     .then(res => res.json())
-    .catch(error => console.erro('Error: ', error))
-    .then(res => console.log('Success: ', res));
+    .catch(error => console.error('Error: ', error))
+    .then((res) => {
+      callback(res);
+      console.log('Success: ', res);
+    });
   };
 
 	function search(searchValue){
