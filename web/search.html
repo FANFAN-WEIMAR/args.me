@@ -157,17 +157,18 @@
         // console.log(data);
         let args = data.results;
         let regex =  /(debatepedia|debatewise|forandagainst|idebate|debate)\./g;
-        for(let arg of args) {
-          let portal = arg.url.match(regex)[0];
+        for(let arg in args) {
+          let portal = args[arg].url.match(regex)[0];
           portal = portal.slice(0, -1);
 
           let argID = portal
-                      + '-' + arg.discussionID
-                      + '-' + arg.argumentID;
+                      + '-' + args[arg].discussionID
+                      + '-' + args[arg].argumentID;
           argumentList.push(argID);
+          args[arg].id = argID;
         }
-        console.log('ArgumentList: ',argumentList);
-        return argumentList;
+        // console.log('ArgumentList: ', argumentList, args);
+        return [argumentList, args];
 
         //FANFAN
         // var length = data.results.length;
