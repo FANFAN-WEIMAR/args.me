@@ -15,18 +15,36 @@
 
 <script type="text/javascript">
 
+  function startSearch() {
+    if (searchText.value === "") {
+      console.log('value not set ');
+      search(searchText.placeholder)
+      .then(sendJSON)
+      .then(tabOpenBarycentric);
+    }
+    else {
+      // console.log('value set ', searchText.value);
+      // searchText.placeholder = searchText.value;
+      // window.location.search.replace(/^\?q=/, searchText.value);
+      search(searchText.value)
+      .then(sendJSON)
+      .then(tabOpenBarycentric);
+    }
+  }
+
 	window.onload=function(){
-		var queryString=window.location.search.replace(/^\?q=/,'');
-    var queryString=queryString.split("&",1);
-		searchText.placeholder=queryString;
-		tabOpenBarycentric();
+		let queryString = window.location.search.replace(/^\?q=/,'');
+    queryString = queryString.split("&",1);
+    searchText.value = queryString;
+		searchText.placeholder = 'Search...';
+
+    // TODO: write working functoin for onclick event!!!
+    var searchButton = document.querySelector('.searchButton');
+    searchButton.addEventListener('onclick', startSearch());
 
 		//tabOpenProCon();
-		//search(queryString);
     //polygonCheck();
 	}
-
-
 </script>
 
 <script type="text/javascript">
@@ -103,103 +121,123 @@
 <script type="text/javascript">
 
 	function searchQuery(){
-		var searchValue=document.getElementById('searchText').value;
-		if(searchValue==""){
-			var searchValue=window.location.search.replace(/^\?q=/,'');
-			var searchValue=searchValue.split("&",1);
+		var query=document.getElementById('searchText').value;
+		if(query==""){
+			var query=window.location.search.replace(/^\?q=/,'');
+			var query=query.split("&",1);
 		}
-		search(searchValue);
+		search(query);
 	}
 
-  function sendJSON(data, callback) {
-    console.log('number of argument send: ' + data.length);
+  function sendJSON(data) {
+    // console.log('number of argument send: ',  data);
     var url = 'http://localhost:3000/';
-    fetch(url, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: new Headers({
-        'Content-Type': 'application/json'
+    return fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
       })
-    })
-    .then(res => res.json())
-    .catch(error => console.error('Error: ', error))
-    .then((res) => {
-      callback(res);
-      console.log('Success: ', res);
-    });
+      .then(res => res.json())
+      .catch(error => console.error('Error: ', error))
+      .then((res) => {
+        console.log('revieved from server: ', res);
+        return res;
+      });
   };
 
-	function search(searchValue){
-		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + searchValue ;
-    var argumentList = [];
-
-    fetch(apiURL)
+	function search(query){
+		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + query;
+    return fetch(apiURL)
       .then(res => res.json())
       .then(function (data) {
-        console.log(data);
+        let argumentList = [];
+        // console.log(data);
         let args = data.results;
         let regex =  /(debatepedia|debatewise|forandagainst|idebate|debate)\./g;
         for(let arg of args) {
-          let portal =arg.url.match(regex)[0];
+          let portal = arg.url.match(regex)[0];
           portal = portal.slice(0, -1);
+
           let argID = portal
                       + '-' + arg.discussionID
                       + '-' + arg.argumentID;
           argumentList.push(argID);
         }
-        sendJSON(argumentList);
+        console.log('ArgumentList: ',argumentList);
+        return argumentList;
 
         //FANFAN
-        var length = data.results.length;
-        var conclusion, stance;
-  			var div=document.getElementById('ProVsCon');
-  			var divPro=document.getElementById('Pro');
-  			var divCon=document.getElementById('Con');
-        while(divPro.firstChild){
-  				divPro.removeChild(divPro.firstChild);
-  			}
-  			while(divCon.firstChild){
-  				divCon.removeChild(divCon.firstChild);
-  			}
-
-  			for(var i=0;i<length;i++){
-  				conclusion=data.results[i].conclusion;
-  				stance=data.results[i].stance;
-  				if(stance==true){
-  					var iDiv = document.createElement('div');
-  					iDiv.innerHTML=conclusion;
-  					div.appendChild(iDiv);
-  					document.getElementById('Pro').appendChild(iDiv);
-  				}else{
-  					var iDiv = document.createElement('div');
-  					iDiv.innerHTML=conclusion;
-  					div.appendChild(iDiv);
-  					document.getElementById('Con').appendChild(iDiv);
-  				}
-  			}
+        // var length = data.results.length;
+        // var conclusion, stance;
+  			// var div=document.getElementById('ProVsCon');
+  			// var divPro=document.getElementById('Pro');
+  			// var divCon=document.getElementById('Con');
+        // while(divPro.firstChild){
+  			// 	divPro.removeChild(divPro.firstChild);
+  			// }
+  			// while(divCon.firstChild){
+  			// 	divCon.removeChild(divCon.firstChild);
+  			// }
+        //
+  			// for(var i=0;i<length;i++){
+  			// 	conclusion=data.results[i].conclusion;
+  			// 	stance=data.results[i].stance;
+  			// 	if(stance==true){
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Pro').appendChild(iDiv);
+  			// 	}else{
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Con').appendChild(iDiv);
+  			// 	}
+  			// }
       });
 	}
 
-  function polygonCheck(){
+  function polygonCheck(content){
+
+    function num_uniq_topics(content) {
+      var set = new Set();
+      let noTopicCount = 0;
+      for(let arg of content) {
+        if(arg.hasOwnProperty('topics')) {
+          for(let topic_tuple of arg.topics) {
+            set.add(topic_tuple.topic);
+          }
+        }
+        else {
+          noTopicCount += 1;
+          continue;
+        }
+      }
+      console.log('number of uniq topics: ', set.size);
+      console.log('number of arg without topics: ', noTopicCount);
+      return set;
+    };
+    var topicNum = num_uniq_topics(content);
+
 		d3.text("topic_dist_per_doc.txt",function(data){
 
 			cleanSvg();
 
 			var argumentData=getArgumentData(data);
-			console.log(argumentData);
-
-
+			// console.log(argumentData);
 			var topicsNum=getTopicsNum(argumentData);
-			//console.log(topicsNum);
+			// console.log(topicsNum);
 			var preparedLabels=setLabel(topicsNum);
-			//console.log(preparedLabels);
+			// console.log(preparedLabels);
 			var checkedTopics=topicsSelection();
 			var verticesNumber=checkedTopics.length;
 			//console.log(verticesNumber);
 			var processedData=argumentAfterTopicSelection(checkedTopics,argumentData,topicsNum);
 			//console.log(processedData);
 			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-			console.log(processedLabel);
+			// console.log(processedLabel);
 
 
 
@@ -444,10 +482,10 @@
 		}
  	}
 
-  function tabOpenBarycentric(){
-
+  function tabOpenBarycentric(data){
+    console.log('data availabe inside bary', data);
 		prepare();
-		polygonCheck();
+		polygonCheck(data);
 
 		 for(var i=0;i<labels.length;i++){
 		 	var subCheckbox=document.createElement("input");
@@ -458,7 +496,7 @@
 			subCheckbox.id="id"+i;
 			subCheckbox.class="box";
 			subCheckbox.checked="checked";
-			subCheckbox.onclick=polygonCheck;
+			// subCheckbox.onclick=polygonCheck;
 	   	document.getElementById("checkbox").appendChild(subCheckbox);
 
 			var label=document.createElement("label");
@@ -493,7 +531,7 @@
 			<h1>Args.me</h1>
 			<div class="SearchContainer">
 					<input id="searchText" type="text" class="searchTerm"/>
-					<button type="submit" class="searchButton" onclick="searchQuery()"/>Go!</button>
+					<button type="submit" class="searchButton" >Go!</button>
 			</div>
 		</div>
 		<div id="body">
