@@ -135,7 +135,7 @@
     var url = 'http://localhost:3000/';
     return fetch(url, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(data[0]),
         headers: new Headers({
           'Content-Type': 'application/json'
         })
@@ -143,8 +143,14 @@
       .then(res => res.json())
       .catch(error => console.error('Error: ', error))
       .then((res) => {
-        console.log('revieved from server: ', res);
-        return res;
+        data[1].forEach(function (argument) {
+          var argumentMatch = res.filter(function (arg) {
+            return arg.id === argument.id
+          });
+          argument.topics = (argumentMatch[0] !== undefined ? argumentMatch[0].topics : null);
+        })
+        // console.log('recieved from server: ', data[1]);
+        return data[1];
       });
   };
 
