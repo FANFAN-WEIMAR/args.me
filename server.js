@@ -1,7 +1,6 @@
 // const http = require('http');
 const fs = require('fs');
 
-  //TODO read express/node on MDN https://developer.mozilla.org/en-US/docs/Learn/Server-side/Express_Nodejs/Introduction
 const hostname = '127.0.0.1';
 const port = 3000;
 
@@ -15,7 +14,6 @@ const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 
 function findArguments(db, collection, argumentList, callback) {
-  console.log(argumentList);
   var collection = db.collection(collection);
   collection.find({
     id: { $in: argumentList}
@@ -33,6 +31,7 @@ function findArguments(db, collection, argumentList, callback) {
   })
 }
 
+//http server handling
 var options = {
   root: './',
 };
