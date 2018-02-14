@@ -132,7 +132,7 @@
 
   function sendJSON(data) {
     // console.log('number of argument send: ',  data);
-    var url = 'http://localhost:3000/';
+    let url = 'http://localhost:3000/';
     return fetch(url, {
         method: 'POST',
         body: JSON.stringify(data[0]),
@@ -144,7 +144,7 @@
       .catch(error => console.error('Error: ', error))
       .then((res) => {
         data[1].forEach(function (argument) {
-          var argumentMatch = res.filter(function (arg) {
+          let argumentMatch = res.filter(function (arg) {
             return arg.id === argument.id
           });
           argument.topics = (argumentMatch[0] !== undefined ? argumentMatch[0].topics : null);
@@ -155,7 +155,7 @@
   };
 
 	function search(query){
-		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + query;
+		let apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + query;
     return fetch(apiURL)
       .then(res => res.json())
       .then(function (data) {
