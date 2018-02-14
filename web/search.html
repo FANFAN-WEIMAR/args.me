@@ -208,26 +208,62 @@
 	}
 
   function polygonCheck(content){
+    /* NOTE: things to calculate for polygon()
+        - topicsNum:      number of uniq topics
+        - processedLabel: label names for topics
+        - verticesNumber: currently active topics
 
-    function num_uniq_topics(content) {
-      var set = new Set();
-      let noTopicCount = 0;
-      for(let arg of content) {
-        if(arg.hasOwnProperty('topics')) {
-          for(let topic_tuple of arg.topics) {
-            set.add(topic_tuple.topic);
+        - function to filter data by six highest topics
+        - argumentData returns condensed version of filtered dataset
+        - write processedData(createMatrix) to get matrix of arg -> topics mapping
+    */
+
+    let clonedContent = _.clone(content, true);
+    let topicOnly = clonedContent.filter(function (arg) {
+      return arg.topics !== undefined;
+    });
+
+    // return array of topics sorted by occurence
+    function getTopicMap(array, size) {
+      let topicMap = d3.map();
+      array.forEach(function (arg, i) {
+        for (topicTuple of arg.topics) {
+          if(topicMap.has(topicTuple.topic)) {
+            topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
+          }
+          else {
+            topicMap.set(topicTuple.topic, 1);
           }
         }
+      });
+      let topicArray = topicMap.entries().sort(function (a, b) {
+        if(a.value < b.value) {return 1;}
+        if(a.value > b.value) {return -1;}
+        return 0;
+      });
+
+      let tmp = topicArray
+        .map((arg, i) => {
+          if(i < size) {return arg.key;}
+        })
+        .filter(arg => arg !== undefined);
+
+      let topicSet = d3.set(tmp);
+      return topicSet;
+    }
+
+    let topicMap = getTopicMap(topicOnly, 6);
+
+    let topicOnlyFilter = topicOnly.filter((arg) => {
+      for(tuple of arg.topics) {
+        if(topicMap.has(tuple.topic)) {
+          return true
+        }
         else {
-          noTopicCount += 1;
           continue;
         }
       }
-      console.log('number of uniq topics: ', set.size);
-      console.log('number of arg without topics: ', noTopicCount);
-      return set;
-    };
-    var topicNum = num_uniq_topics(content);
+    });
 
 		d3.text("topic_dist_per_doc.txt",function(data){
 
@@ -491,7 +527,6 @@
  	}
 
   function tabOpenBarycentric(data){
-    console.log('data availabe inside bary', data);
 		prepare();
 		polygonCheck(data);
 
