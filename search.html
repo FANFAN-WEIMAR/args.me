@@ -12,6 +12,7 @@
 <script src="js/mds.js"></script>
 <script src="js/barycentric.js"></script>
 <script src="js/lodash.js"></script>
+<script src="js/d3.layout.cloud.js"></script>
 
 <script type="text/javascript">
 
@@ -147,65 +148,58 @@
 	}
 
   function polygonCheck(){
-		d3.text("topic_dist_per_doc.txt",function(data){
-
+		d3.json("data/sampleData.json",function(error,data){
+		//d3.text("topic_dist_per_doc.txt",function(error,data){
+			//console.log(data);
 			cleanSvg();
 
-			var argumentData=getArgumentData(data);
-			console.log(argumentData);
+			var results=data.results;
+			//console.log(results);
 
+			var stance=[];
+			var score=[];
+			var topicsVector=[];
+			var title=[];
+			var url=[];
+			for(var i=0;i<results.length;i++){
+				stance[i]=results[i].stance;
+				score[i]=results[i].score;
+				topicsVector[i]=results[i].topics;
+				title[i]=results[i].title;
+				url[i]=results[i].url;
+			}
+			//console.log(stance);
+			//console.log(score);
+			//console.log(topicsVector);
 
-			var topicsNum=getTopicsNum(argumentData);
+			var topicsNum=getTopicsNum(topicsVector);
 			//console.log(topicsNum);
 			var preparedLabels=setLabel(topicsNum);
 			//console.log(preparedLabels);
 			var checkedTopics=topicsSelection();
+			//console.log(checkedTopics);
 			var verticesNumber=checkedTopics.length;
 			//console.log(verticesNumber);
-			var processedData=argumentAfterTopicSelection(checkedTopics,argumentData,topicsNum);
-			//console.log(processedData);
+
 			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-			console.log(processedLabel);
+			//console.log(processedLabel);
+			var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
+			console.log(processedWeight);
+			var processedData=argumentAfterTopicSelection(processedWeight);
+			console.log(processedData);
 
-
-
-			function getArgumentData(data){
-				var argumentData=[];
-				var data=data.split(/[[\]]/);
-				for(var i=0;i<data.length;i++){
-					if(isNaN(data[i])){
-						data[i]=data[i].replace(/,/g,"");
-						data[i]=data[i].split(/[(\)]/).filter(clean);
-						argumentData.push(data[i]);
-					}
-				}
-				//console.log(argumentData);
-				for(var i=0;i<argumentData.length;i++){
-					for(var j=0;j<argumentData[i].length;j++){
-						var cell=argumentData[i][j].split(" ");
-						var topicID=cell[0];
-						var freq=cell[1];
-
-						var newCell = {};
-						newCell.topicID = topicID;
-						newCell.freq = freq;
-						argumentData[i][j]=newCell;
-					}
-				}
-				return argumentData;
-			}
 			function getTopicsNum(argumentData){
 				var arrayTopic=[]
 				for(var i=0;i<argumentData.length;i++){
 					for(var j=0;j<argumentData[i].length;j++){
-						arrayTopic.push(argumentData[i][j].topicID);
+						arrayTopic.push(argumentData[i][j].topic);
 					}
 				}
 				return Math.max.apply(null, arrayTopic);
 			}
 			function setLabel(num){
 				var labelsA=[];
-				for(i=0;i<num;i++){
+				for(i=0;i<=num;i++){
 					//labelsA[i]="topic"+(i);
 					labelsA[i]=labels[i];
 				}
@@ -221,17 +215,26 @@
 				}
 				return checkedTopics;
 			}
-			function argumentAfterTopicSelection(checkedTopics,argumentData,topicsNum){
+
+			function topicsAfterTopicSelection(checkedTopics, labels){
+				var processedLabel=[];
+				for(var a=0;a<checkedTopics.length;a++){
+					processedLabel[a]=labels[checkedTopics[a]]
+				}
+				return processedLabel;
+			}
+
+			function weightAfterTopicSelection(checkedTopics,argumentData,topicsNum){
 				var freqArray=[];
 				for(var i=0;i<argumentData.length;i++){
-					freqArray[i]=new Array(topicsNum);
+					freqArray[i]=new Array(topicsNum+1);
 				}
 
 				for(var i=0;i<argumentData.length;i++){
 					for(var k=0;k<argumentData[i].length;k++){
-						for(var j=0;j<topicsNum;j++){
-							if(j==argumentData[i][k].topicID){
-								freqArray[i][j]=argumentData[i][k].freq;
+						for(var j=0;j<=topicsNum;j++){
+							if(j==argumentData[i][k].topic){
+								freqArray[i][j]=argumentData[i][k].weight;
 							}else if(freqArray[i][j]>0){
 								freqArray[i][j]=freqArray[i][j];
 							}else{
@@ -245,36 +248,57 @@
 				var col=freqArray[0].length;
 				var row=freqArray.length;
 
-				var processedData=[];
+				var processedWeight=[];
 				for(var i=0;i<row;i++){
-					processedData[i]=new Array(checkedTopics.length);
+					processedWeight[i]=new Array(checkedTopics.length);
 				}
 
-				//console.log(processedData);
 				for (var a=0;a<row;a++){
 					for (var b=0;b<checkedTopics.length;b++){
 						var n=checkedTopics[b];
 						var m=parseFloat(freqArray[a][n])
-						processedData[a][b]=m;
+						processedWeight[a][b]=m;
 					}
 				}
+				//processedData=processedData.filter(remove)
 				//console.log(processedData);
+				return processedWeight;
+			}
 
 
+
+			function argumentAfterTopicSelection(processedWeight){
+				var processedData=[];
+				for(var i=0;i<processedWeight.length;i++){
+					processedData.push({
+						weight:processedWeight[i],
+						score:score[i],
+						stance:stance[i],
+						title:title[i],
+						url:url[i]
+					})
+				}
+				processedData=processedData.filter(remove)
 				return processedData;
 			}
-			function topicsAfterTopicSelection(checkedTopics, labels){
-				var processedLabel=[];
-				for(var a=0;a<checkedTopics.length;a++){
-					processedLabel[a]=labels[checkedTopics[a]]
+
+			function remove(value){
+				var zeroVector=[];
+				for(var i=0;i<value.weight.length;i++){
+					zeroVector[i]=0;
 				}
-				return processedLabel;
+				var equalCheck=_.isEqual(value.weight,zeroVector);
+				if(!equalCheck){
+					return true;
+				}
 			}
+
 			function clean(value){
 				if(isNaN(value)){
 					return true;
 				}
 			}
+
 			function cleanSvg(){
 				var Polygon=document.getElementById('polygon');
 				while(Polygon.firstChild){
@@ -415,7 +439,7 @@
 		prepare();
 		polygonCheck();
 
-		 for(var i=0;i<labels.length;i++){
+		for(var i=0;i<labels.length;i++){
 		 	var subCheckbox=document.createElement("input");
 			subCheckbox.type="checkbox";
 			subCheckbox.class="checkbox"
@@ -431,9 +455,10 @@
 			label.htmlFor=labels[i];
 	 	  label.appendChild(document.createTextNode(labels[i]));
 			document.getElementById("checkbox").appendChild(label);
-	 	 	//checkbox.setAttribute("id","checkbox");
 		 }
-		 function prepare(){
+
+
+		function prepare(){
  			clear();
 
  			var barycentric=document.createElement("div");
@@ -447,6 +472,22 @@
  			var checkbox=document.createElement("div");
  			document.getElementById("barycentric").appendChild(checkbox);
  			checkbox.setAttribute("id","checkbox");
+
+			var proBox=document.createElement("div");
+			document.getElementById("barycentric").appendChild(proBox);
+			proBox.setAttribute("id","proBox");
+
+			var proTitle=document.createElement("div");
+			document.getElementById("barycentric").appendChild(proTitle);
+			proTitle.setAttribute("id","proTitle");
+
+			var conBox=document.createElement("div");
+			document.getElementById("barycentric").appendChild(conBox);
+			conBox.setAttribute("id","conBox");
+
+			var conTitle=document.createElement("div");
+			document.getElementById("barycentric").appendChild(conTitle);
+			conTitle.setAttribute("id","conTitle");
  			}
 	}
 </script>

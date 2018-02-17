@@ -213,13 +213,13 @@
         svg.append("g")
             .attr("class", "axis")
             .attr("transform", "translate(0," + (h - padding + 2*pointRadius) + ")")
-            .style("fill","#ddd")
+            .style("fill","#EEE")
             .call(xAxis);
 
         svg.append("g")
             .attr("class", "axis")
             .attr("transform", "translate(" + (padding - 2*pointRadius) + ",0)")
-            .style("fill","#ddd")
+            .style("fill","#EEE")
             .call(yAxis);
 
         var nodes = svg.selectAll("circle")
