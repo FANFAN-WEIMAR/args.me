@@ -9,8 +9,7 @@ html,body{
 
 #container{
 	min-height: 100%;
-	position: realti;
-
+	position: relative;
 }
 
 #header {
@@ -131,7 +130,7 @@ html,body{
 }
 
 #resultDisplay{
-	position: relative;
+	position: absolute;
   top: 250px;
 
 	width: 100%;
@@ -177,7 +176,6 @@ html,body{
 }
 #barycentric{
 	position: fixed;
-<<<<<<< HEAD:css/search.css
 	width: 100%
 	height:100%
 }
@@ -186,27 +184,12 @@ html,body{
 	position:fixed;
 	top:150px;
 	left: 480px;
-=======
-	top: 100px;
-	left: 0px;
-}
-
-#polygon{
-	position:absolute;
-	top:25px;
-	left: 0px;
->>>>>>> origin/master:web/css/search.css
 }
 
 #checkbox{
 	position:fixed;
-<<<<<<< HEAD:css/search.css
 	left:440px;
 	top: 180px;
-=======
-	left:0px;
-	top: 190px;
->>>>>>> origin/master:web/css/search.css
 }
 
 input[type=checkbox]+label {
