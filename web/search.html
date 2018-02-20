@@ -5,10 +5,11 @@
 <link rel="stylesheet" type="text/css" href="css/search.css"/>
 <title>Results</title>
 
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/numericjs@1.2.6/numeric-1.2.6.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
+
 <script src="js/mds.js"></script>
 <script src="js/barycentric.js"></script>
 <script src="js/lodash.js"></script>
@@ -112,49 +113,140 @@
 		search(searchValue);
 	}
 
-	function search(searchValue){
-		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + searchValue ;
-		$.getJSON(apiURL,function(data){
-			var length=data.results.length;
-			var conclusion;
-			var stance;
-			var div=document.getElementById('ProVsCon');
-			var divPro=document.getElementById('Pro');
-			var divCon=document.getElementById('Con');
+  function sendJSON(data) {
+    // console.log('number of argument send: ',  data);
+    let url = 'http://localhost:3000/';
+    return fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(data[0]),
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
+      })
+      .then(res => res.json())
+      .catch(error => console.error('Error: ', error))
+      .then((res) => {
+        data[1].forEach(function (argument) {
+          let argumentMatch = res.filter(function (arg) {
+            return arg.id === argument.id
+          });
+          argument.topics = (argumentMatch[0] !== undefined ? argumentMatch[0].topics : null);
+        })
+        // console.log('recieved from server: ', data[1]);
+        return data[1];
+      });
+  };
 
-			while(divPro.firstChild){
-				divPro.removeChild(divPro.firstChild);
-			}
-			while(divCon.firstChild){
-				divCon.removeChild(divCon.firstChild);
-			}
+	function search(query){
+		let apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + query;
+    return fetch(apiURL)
+      .then(res => res.json())
+      .then(function (data) {
+        let argumentList = [];
+        // console.log(data);
+        let args = data.results;
+        let regex =  /(debatepedia|debatewise|forandagainst|idebate|debate)\./g;
+        for(let arg in args) {
+          let portal = args[arg].url.match(regex)[0];
+          portal = portal.slice(0, -1);
 
-			for(var i=0;i<length;i++){
-				conclusion=data.results[i].conclusion;
-				stance=data.results[i].stance;
-				if(stance==true){
-					var iDiv = document.createElement('div');
-					iDiv.innerHTML=conclusion;
-					div.appendChild(iDiv);
-					document.getElementById('Pro').appendChild(iDiv);
-				}else{
-					var iDiv = document.createElement('div');
-					iDiv.innerHTML=conclusion;
-					div.appendChild(iDiv);
-					document.getElementById('Con').appendChild(iDiv);
-				}
-			}
-		})
+          let argID = portal
+                      + '-' + args[arg].discussionID
+                      + '-' + args[arg].argumentID;
+          argumentList.push(argID);
+          args[arg].id = argID;
+        }
+        // console.log('ArgumentList: ', argumentList, args);
+        return [argumentList, args];
+
+        //FANFAN
+        // var length = data.results.length;
+        // var conclusion, stance;
+  			// var div=document.getElementById('ProVsCon');
+  			// var divPro=document.getElementById('Pro');
+  			// var divCon=document.getElementById('Con');
+        // while(divPro.firstChild){
+  			// 	divPro.removeChild(divPro.firstChild);
+  			// }
+  			// while(divCon.firstChild){
+  			// 	divCon.removeChild(divCon.firstChild);
+  			// }
+        //
+  			// for(var i=0;i<length;i++){
+  			// 	conclusion=data.results[i].conclusion;
+  			// 	stance=data.results[i].stance;
+  			// 	if(stance==true){
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Pro').appendChild(iDiv);
+  			// 	}else{
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Con').appendChild(iDiv);
+  			// 	}
+  			// }
+      });
 	}
 
-  function polygonCheck(){
-		d3.json("data/sampleData.json",function(error,data){
-		//d3.text("topic_dist_per_doc.txt",function(error,data){
-			//console.log(data);
-			cleanSvg();
+  function polygonCheck(content){
+    /* NOTE: things to calculate for polygon()
+        - topicsNum:      number of uniq topics
+        - processedLabel: label names for topics
+        - verticesNumber: currently active topics
 
-			var results=data.results;
-			//console.log(results);
+        - function to filter data by six highest topics
+        - argumentData returns condensed version of filtered dataset
+        - write processedData(createMatrix) to get matrix of arg -> topics mapping
+    */
+
+    let clonedContent = _.clone(content, true);
+    let topicOnly = clonedContent.filter(function (arg) {
+      return arg.topics !== undefined;
+    });
+
+    // return array of topics sorted by occurence
+    function getTopicMap(array, size) {
+      let topicMap = d3.map();
+      array.forEach(function (arg, i) {
+        for (topicTuple of arg.topics) {
+          if(topicMap.has(topicTuple.topic)) {
+            topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
+          }
+          else {
+            topicMap.set(topicTuple.topic, 1);
+          }
+        }
+      });
+      let topicArray = topicMap.entries().sort(function (a, b) {
+        if(a.value < b.value) {return 1;}
+        if(a.value > b.value) {return -1;}
+        return 0;
+      });
+
+      let tmp = topicArray
+        .map((arg, i) => {
+          if(i < size) {return arg.key;}
+        })
+        .filter(arg => arg !== undefined);
+
+      let topicSet = d3.set(tmp);
+      return topicSet;
+    }
+
+    let topicMap = getTopicMap(topicOnly, 6);
+
+    let topicOnlyFilter = topicOnly.filter((arg) => {
+      for(tuple of arg.topics) {
+        if(topicMap.has(tuple.topic)) {
+          return true
+        }
+        else {
+          continue;
+        }
+      }
+    });
 
 			var stance=[];
 			var score=[];
@@ -434,8 +526,7 @@
 		}
  	}
 
-  function tabOpenBarycentric(){
-
+  function tabOpenBarycentric(data){
 		prepare();
 		polygonCheck();
 
