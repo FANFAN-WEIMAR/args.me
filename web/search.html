@@ -30,21 +30,6 @@
       .then(sendJSON)
       .then(tabOpenBarycentric);
     }
-  }function startSearch() {
-    if (searchText.value === "") {
-      console.log('value not set ');
-      search(searchText.placeholder)
-      .then(sendJSON)
-      .then(tabOpenBarycentric);
-    }
-    else {
-      // console.log('value set ', searchText.value);
-      // searchText.placeholder = searchText.value;
-      // window.location.search.replace(/^\?q=/, searchText.value);
-      search(searchText.value)
-      .then(sendJSON)
-      .then(tabOpenBarycentric);
-    }
   }
 
   window.onload=function(){
@@ -549,7 +534,7 @@
 
   function tabOpenBarycentric(data){
 		prepare();
-		polygonCheck();
+		polygonCheck(data);
 
 		for(var i=0;i<labels.length;i++){
 		 	var subCheckbox=document.createElement("input");
