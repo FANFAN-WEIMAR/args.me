@@ -277,161 +277,152 @@
         }
       }
     });
+    // console.log(topicOnlyFilter);
 
-			var stance=[];
-			var score=[];
-			var topicsVector=[];
-			var title=[];
-			var url=[];
-			for(var i=0;i<results.length;i++){
-				stance[i]=results[i].stance;
-				score[i]=results[i].score;
-				topicsVector[i]=results[i].topics;
-				title[i]=results[i].title;
-				url[i]=results[i].url;
-			}
-			//console.log(stance);
-			//console.log(score);
-			//console.log(topicsVector);
 
-			var topicsNum=getTopicsNum(topicsVector);
-			//console.log(topicsNum);
-			var preparedLabels=setLabel(topicsNum);
-			//console.log(preparedLabels);
-			var checkedTopics=topicsSelection();
-			//console.log(checkedTopics);
-			var verticesNumber=checkedTopics.length;
-			//console.log(verticesNumber);
+		var stance=[];
+		var score=[];
+		var topicsVector=[];
+		var title=[];
+		var url=[];
 
-			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-			//console.log(processedLabel);
-			var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
-			console.log(processedWeight);
-			var processedData=argumentAfterTopicSelection(processedWeight);
-			console.log(processedData);
+		for(var i=0;i<content.length;i++){
+			stance[i]=content[i].stance;
+			score[i]=content[i].score;
+			topicsVector[i]=content[i].topics;
+			title[i]=content[i].title;
+			url[i]=content[i].url;
+		}
 
-			function getTopicsNum(argumentData){
-				var arrayTopic=[]
-				for(var i=0;i<argumentData.length;i++){
-					for(var j=0;j<argumentData[i].length;j++){
-						arrayTopic.push(argumentData[i][j].topic);
-					}
+		// var topicsNum=getTopicsNum(topicsVector);
+		var topicsNum=6;
+		//console.log(topicsNum);
+		var preparedLabels=setLabel(topicsNum);
+		//console.log(preparedLabels);
+		var checkedTopics=topicsSelection();
+		//console.log(checkedTopics);
+		var verticesNumber=checkedTopics.length;
+		//console.log(verticesNumber);
+
+		var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
+		//console.log(processedLabel);
+		var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
+		console.log(processedWeight);
+		var processedData=argumentAfterTopicSelection(processedWeight);
+		console.log(processedData);
+
+		function getTopicsNum(argumentData){
+			var arrayTopic=[]
+			for(var i=0;i<argumentData.length;i++){
+				for(var j=0;j<argumentData[i].length;j++){
+					arrayTopic.push(argumentData[i][j].topicID);
 				}
-				return Math.max.apply(null, arrayTopic);
 			}
-			function setLabel(num){
-				var labelsA=[];
-				for(i=0;i<=num;i++){
-					//labelsA[i]="topic"+(i);
-					labelsA[i]=labels[i];
-				}
-				return labelsA;
+			return Math.max.apply(null, arrayTopic);
+		}
+		function setLabel(num){
+			var labelsA=[];
+			for(i=0;i<=num;i++){
+				//labelsA[i]="topic"+(i);
+				labelsA[i]=labels[i];
 			}
-			function topicsSelection(){
-				var checkedTopics=[];
-				var topics=document.getElementsByName('topic');
-				for(var i=0;i<topics.length;i++){
-					if(topics[i].checked){
-						checkedTopics.push(i);
-					}
+			return labelsA;
+		}
+		function topicsSelection(){
+			var checkedTopics=[];
+			var topics=document.getElementsByName('topic');
+			for(var i=0;i<topics.length;i++){
+				if(topics[i].checked){
+					checkedTopics.push(i);
 				}
-				return checkedTopics;
+			}
+			return checkedTopics;
+		}
+		function topicsAfterTopicSelection(checkedTopics, labels){
+			var processedLabel=[];
+			for(var a=0;a<checkedTopics.length;a++){
+				processedLabel[a]=labels[checkedTopics[a]]
+			}
+			return processedLabel;
+		}
+		function weightAfterTopicSelection(checkedTopics,argumentData,topicsNum){
+			var freqArray=[];
+			for(var i=0;i<argumentData.length;i++){
+				freqArray[i]=new Array(topicsNum+1);
 			}
 
-			function topicsAfterTopicSelection(checkedTopics, labels){
-				var processedLabel=[];
-				for(var a=0;a<checkedTopics.length;a++){
-					processedLabel[a]=labels[checkedTopics[a]]
-				}
-				return processedLabel;
-			}
-
-			function weightAfterTopicSelection(checkedTopics,argumentData,topicsNum){
-				var freqArray=[];
-				for(var i=0;i<argumentData.length;i++){
-					freqArray[i]=new Array(topicsNum+1);
-				}
-
-				for(var i=0;i<argumentData.length;i++){
-					for(var k=0;k<argumentData[i].length;k++){
-						for(var j=0;j<=topicsNum;j++){
-							if(j==argumentData[i][k].topic){
-								freqArray[i][j]=argumentData[i][k].weight;
-							}else if(freqArray[i][j]>0){
-								freqArray[i][j]=freqArray[i][j];
-							}else{
-								freqArray[i][j]=0;
-							}
+			for(var i=0;i<argumentData.length;i++){
+				for(var k=0;k<argumentData[i].length;k++){
+					for(var j=0;j<=topicsNum;j++){
+						if(j==argumentData[i][k].topic){
+							freqArray[i][j]=argumentData[i][k].weight;
+						}else if(freqArray[i][j]>0){
+							freqArray[i][j]=freqArray[i][j];
+						}else{
+							freqArray[i][j]=0;
 						}
 					}
 				}
-				//console.log(freqArray);
+			}
+			//console.log(freqArray);
 
-				var col=freqArray[0].length;
-				var row=freqArray.length;
+			var col=freqArray[0].length;
+			var row=freqArray.length;
 
-				var processedWeight=[];
-				for(var i=0;i<row;i++){
-					processedWeight[i]=new Array(checkedTopics.length);
-				}
-
-				for (var a=0;a<row;a++){
-					for (var b=0;b<checkedTopics.length;b++){
-						var n=checkedTopics[b];
-						var m=parseFloat(freqArray[a][n])
-						processedWeight[a][b]=m;
-					}
-				}
-				//processedData=processedData.filter(remove)
-				//console.log(processedData);
-				return processedWeight;
+			var processedWeight=[];
+			for(var i=0;i<row;i++){
+				processedWeight[i]=new Array(checkedTopics.length);
 			}
 
-
-
-			function argumentAfterTopicSelection(processedWeight){
-				var processedData=[];
-				for(var i=0;i<processedWeight.length;i++){
-					processedData.push({
-						weight:processedWeight[i],
-						score:score[i],
-						stance:stance[i],
-						title:title[i],
-						url:url[i]
-					})
-				}
-				processedData=processedData.filter(remove)
-				return processedData;
-			}
-
-			function remove(value){
-				var zeroVector=[];
-				for(var i=0;i<value.weight.length;i++){
-					zeroVector[i]=0;
-				}
-				var equalCheck=_.isEqual(value.weight,zeroVector);
-				if(!equalCheck){
-					return true;
+			for (var a=0;a<row;a++){
+				for (var b=0;b<checkedTopics.length;b++){
+					var n=checkedTopics[b];
+					var m=parseFloat(freqArray[a][n])
+					processedWeight[a][b]=m;
 				}
 			}
-
-			function clean(value){
-				if(isNaN(value)){
-					return true;
-				}
+			//processedData=processedData.filter(remove)
+			//console.log(processedData);
+			return processedWeight;
+		}
+		function argumentAfterTopicSelection(processedWeight){
+			var processedData=[];
+			for(var i=0;i<processedWeight.length;i++){
+				processedData.push({
+					weight:processedWeight[i],
+					score:score[i],
+					stance:stance[i],
+					title:title[i],
+					url:url[i]
+				})
 			}
-
-			function cleanSvg(){
-				var Polygon=document.getElementById('polygon');
-				while(Polygon.firstChild){
-					Polygon.removeChild(Polygon.firstChild);
-				}
+			processedData=processedData.filter(remove)
+			return processedData;
+		}
+		function remove(value){
+			var zeroVector=[];
+			for(var i=0;i<value.weight.length;i++){
+				zeroVector[i]=0;
 			}
-			// console.log(processedDataWithoutNull);
-			polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
-		});
+			var equalCheck=_.isEqual(value.weight,zeroVector);
+			if(!equalCheck){
+				return true;
+			}
+		}
+		function clean(value){
+			if(isNaN(value)){
+				return true;
+			}
+		}
+		function cleanSvg(){
+			var Polygon=document.getElementById('polygon');
+			while(Polygon.firstChild){
+				Polygon.removeChild(Polygon.firstChild);
+			}
+		}
+		// console.log(processedDataWithoutNull);
+		polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
 	}
-
 </script>
 
 <script type="text/javascript">
