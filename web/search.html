@@ -153,7 +153,7 @@
   };
 
 	function search(query){
-		let apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + query;
+		let apiURL="http://www.args.me/api/v1/_search?query=" + query;
     return fetch(apiURL)
       .then(res => res.json())
       .then(function (data) {
