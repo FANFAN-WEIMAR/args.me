@@ -26,7 +26,7 @@ function findArguments(db, collection, argumentList, callback) {
       argument['topics'] = arg['topics'];
       data.push(argument);
     }
-    console.log('Found ' + res.length + ' documents within database' );
+    console.log('Found ' + res.length + ' documents within database\n');
     callback(data);
   })
 }
