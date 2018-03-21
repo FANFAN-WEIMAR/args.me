@@ -328,11 +328,11 @@
 		//console.log(verticesNumber);
 
 		var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-		//console.log(processedLabel);
-		var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
-		console.log(processedWeight);
+		// console.log(processedLabel);
+		var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVectorExpand,topicsNum);
+		// console.log('processedWeight: ', processedWeight);
 		var processedData=argumentAfterTopicSelection(processedWeight);
-		console.log(processedData);
+		// console.log('processedData: ', processedData);
 
 		function getTopicsNum(argumentData){
 			var arrayTopic=[]
