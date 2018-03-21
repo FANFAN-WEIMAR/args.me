@@ -270,14 +270,21 @@
       });
     // console.log('topicsVectorExpand: ', topicsVectorExpand);
 
-    let topicOnlyFilter = topicOnly.filter((arg) => {
-      for(tuple of arg.topics) {
-        if(topicMap.has(tuple.topic)) {
-          return true
-        }
-        else {
-          continue;
-        }
+    // cut argumentData to eight topics and other based on topic frequency
+    let occurenceTopicVec = topicsVectorExpand
+      .map(function (array) {
+        // compute weight of topic: other
+        let otherTopicsWeight = array
+          .slice(0, 8)
+          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
+        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
+
+        let arrayCut = array.slice(0, 8)
+          .concat([otherTopicsWeight]);
+
+        return arrayCut;
+      });
+    console.log('occurenceTopicVec: ', occurenceTopicVec);
       }
     });
     // console.log(topicOnlyFilter);
