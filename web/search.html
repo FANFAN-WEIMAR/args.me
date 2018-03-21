@@ -217,9 +217,8 @@
     */
 
     let clonedContent = _.clone(content, true);
-    let topicOnly = clonedContent.filter(function (arg) {
-      return arg.topics !== undefined;
-    });
+    // all properties of the content but only with arguments that have topics
+    let argumentData = clonedContent.filter(arg => arg.topics !== undefined);
 
     // return array of topics sorted by descending occurence
     function getTopicArray(array) {
