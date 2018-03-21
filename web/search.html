@@ -245,15 +245,10 @@
       return topicArray;
     }
 
-      let tmp = topicArray
-        .map((arg, i) => {
-          if(i < size) {return arg.key;}
-        })
-        .filter(arg => arg !== undefined);
+    // sorted topicArray by occurence
+    let topicArray = getTopicArray(argumentData).map((a) => a.key);
+    console.log('topicArray', topicArray);
 
-      let topicSet = d3.set(tmp);
-      return topicSet;
-    }
 
     let topicMap = getTopicMap(topicOnly, 6);
 
