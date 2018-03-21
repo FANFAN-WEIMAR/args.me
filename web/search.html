@@ -249,6 +249,17 @@
     let topicArray = getTopicArray(argumentData).map((a) => a.key);
     console.log('topicArray', topicArray);
 
+    // add all topics to args in argumentData
+    let topicsVectorExpand = argumentData
+      .map(arg => arg.topics)
+      .map(function (array, i) {
+      // let result = new Array;
+      // result = result.concat(array);
+        topicArray.forEach(function (topic) {
+          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
+        });
+        return array;
+      });
 
     let topicMap = getTopicMap(topicOnly, 6);
 
