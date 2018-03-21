@@ -285,9 +285,22 @@
         return arrayCut;
       });
     console.log('occurenceTopicVec: ', occurenceTopicVec);
+
+    let processedData2 = argumentData.map((arg, i) => {
+      return {
+        argumentID: arg.argumentID,
+        conclusion: arg.conclusion,
+        discussionID: arg.discussionID,
+        id: arg.id,
+        premise: arg.premise,
+        score: arg.score,
+        stance: arg.stance,
+        title: arg.title,
+        topics: occurenceTopicVec[i],
+        url: arg.url
       }
     });
-    // console.log(topicOnlyFilter);
+    console.log('processedData2: ', processedData2);
 
 
 		var stance=[];
