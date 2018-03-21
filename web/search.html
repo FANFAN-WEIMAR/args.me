@@ -261,7 +261,14 @@
         return array;
       });
 
-    let topicMap = getTopicMap(topicOnly, 6);
+      // sort according to order of topicsArray
+      topicsVectorExpand
+      .forEach((list) => {
+        list.sort(function (a, b) {
+          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
+        });
+      });
+    // console.log('topicsVectorExpand: ', topicsVectorExpand);
 
     let topicOnlyFilter = topicOnly.filter((arg) => {
       for(tuple of arg.topics) {
