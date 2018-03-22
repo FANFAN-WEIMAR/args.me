@@ -220,7 +220,6 @@
     let processedLabels = selectedTopics();
     console.log(processedLabels);
 
-
     let clonedContent = _.clone(content, true);
     // all properties of the content but only with arguments that have topics
     let argumentData = clonedContent.filter(arg => arg.topics !== undefined);
@@ -341,8 +340,11 @@
 
     function selectedTopics() {
       let nodeList = document.querySelectorAll('input[type="checkbox"]:checked');
-      console.log('nodeList: ', nodeList);
-      return nodeList;
+      let result = [];
+      nodeList.forEach(function (item) {
+        result.push(item.attributes.value.nodeValue);
+      })
+      return result;
     }
 
 		function getTopicsNum(argumentData){
@@ -458,8 +460,7 @@
 		// polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
 
     // try with API data
-    processedLabels = selectedTopics();
-		polygon(processedData2,d3.select('#polygon'),200,9,processedLabel);
+		polygon(processedData2,d3.select('#polygon'),200,9,processedLabels);
 	}
 </script>
 
