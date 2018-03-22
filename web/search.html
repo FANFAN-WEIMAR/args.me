@@ -5,9 +5,10 @@
 <link rel="stylesheet" type="text/css" href="css/search.css"/>
 <title>Results</title>
 
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/numericjs@1.2.6/numeric-1.2.6.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
 
 <script src="js/mds.js"></script>
@@ -216,6 +217,10 @@
         - write processedData(createMatrix) to get matrix of arg -> topics mapping
     */
 
+    let processedLabels = selectedTopics();
+    console.log(processedLabels);
+
+
     let clonedContent = _.clone(content, true);
     // all properties of the content but only with arguments that have topics
     let argumentData = clonedContent.filter(arg => arg.topics !== undefined);
@@ -247,7 +252,7 @@
 
     // sorted topicArray by occurence
     let topicArray = getTopicArray(argumentData).map((a) => a.key);
-    console.log('topicArray', topicArray);
+    // console.log('topicArray', topicArray);
 
     // add all topics to args in argumentData
     let topicsVectorExpand = argumentData
@@ -284,7 +289,7 @@
 
         return arrayCut;
       });
-    console.log('occurenceTopicVec: ', occurenceTopicVec);
+    // console.log('occurenceTopicVec: ', occurenceTopicVec);
 
     let processedData2 = argumentData.map((arg, i) => {
       return {
@@ -300,7 +305,7 @@
         url: arg.url
       }
     });
-    console.log('processedData2: ', processedData2);
+    // console.log('processedData2: ', processedData2);
 
 
 		var stance=[];
@@ -333,6 +338,12 @@
 		// console.log('processedWeight: ', processedWeight);
 		var processedData=argumentAfterTopicSelection(processedWeight);
 		// console.log('processedData: ', processedData);
+
+    function selectedTopics() {
+      let nodeList = document.querySelectorAll('input[type="checkbox"]:checked');
+      console.log('nodeList: ', nodeList);
+      return nodeList;
+    }
 
 		function getTopicsNum(argumentData){
 			var arrayTopic=[]
@@ -444,7 +455,11 @@
 			}
 		}
 		// console.log(processedDataWithoutNull);
-		polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
+		// polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
+
+    // try with API data
+    processedLabels = selectedTopics();
+		polygon(processedData2,d3.select('#polygon'),200,9,processedLabel);
 	}
 </script>
 

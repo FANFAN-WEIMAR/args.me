@@ -12,6 +12,11 @@
       document.getElementById('proBox').appendChild(listArgument(proTitle));
       document.getElementById('conBox').appendChild(listArgument(conTitle));
 
+      rowData = processedData.map(function (arg) {
+        return arg.topics;
+      });
+      console.log(rowData);
+
       var col=rowData[0].length;
       var row=rowData.length;
 
@@ -44,7 +49,7 @@
 
       function wordDisplay(width,height,id){
 
-        var fill = d3.scale.category20();
+        var fill = d3.scaleOrdinal(d3.schemeCategory20);
 
         var layout = d3.layout.cloud()
             .size([width, height])
