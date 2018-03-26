@@ -18,7 +18,7 @@ html,body{
 	color:#0C9;
   background: #ccc;
   width: 100%;
-	height: 80px;
+	height: 50px;
 	z-index: 1000;
 	}
 
@@ -37,18 +37,17 @@ html,body{
 
 #header h1{
 	position: absolute;
-	top:5px;
-	left: 50px;
+	top:-10px;
+	left: 10px;
 
 }
 
 .SearchContainer{
 
   	position: absolute;
-  	top:50px;
-  	left:380px;
+  	left:150px;
 		z-index:1000;
-  	transform: translate(-50%, -50%);
+		top:14px;
 	}
 
 .searchTerm{
@@ -59,7 +58,7 @@ html,body{
 	border-top-left-radius: 8px;
 	border-bottom-left-radius: 8px;
 	width: 300px;
-	height: 40px;
+	height: 30px;
 
 	}
 
@@ -76,8 +75,8 @@ html,body{
 		border-bottom-right-radius: 8px;
   	cursor: pointer;
   	font-size: 15px;
-		width: 50px;
-		height: 45px;
+		width: 40px;
+		height: 37px;
     color:#fff;
 	}
 
@@ -110,12 +109,19 @@ html,body{
 
 #tab{
 	position: fixed;
-	top:100px;
+	top:70px;
 	color: #C90;
 	z-index:1000;
 	width: 100%;
 	background-color: #ddd;
+	height: 40px;
 
+}
+
+#tab ul{
+	position: absolute;
+	top:-5px;
+	left:-20px;
 }
 
 
@@ -130,10 +136,10 @@ html,body{
 }
 
 #resultDisplay{
-	position: absolute;
-  top: 250px;
-
+	position: fixed;
+  top: 110px;
 	width: 100%;
+	height: 100%;
 	}
 
 #ProVsCon{
@@ -176,33 +182,31 @@ html,body{
 }
 #barycentric{
 	position: fixed;
-	width: 100%
-	height:100%
+	width: 100%;
+	height:100%;
+
 }
 
 #polygon{
 	position:fixed;
-	top:150px;
-	left: 480px;
+	top:100px;
+	left: 700px;
+	z-index: 10000
 }
 
 #checkbox{
 	position:fixed;
-	left:440px;
-	top: 180px;
+	left:1300px;
+	top: 150px;
+	width: 200px;
+	z-index: 10000;
+	background: #eee;
+
+
 }
 
-input[type=checkbox]+label {
-	padding-right: 20px;
-	border-radius: 1px;
-	color:#ccc;
-}
-
-
-input[type=checkbox]:checked+label{
-	padding-right: 20px;
-	border-radius: 1px;
-	color: #000;
+#listCheck{
+	list-style-type:none
 }
 
 .words{
@@ -215,53 +219,23 @@ input[type=checkbox]:checked+label{
 	z-index: 0;
 }
 
-
-#proBox{
+#overall{
 	position: absolute;
-	top:-100px;
-  width: 305px;
-	left:20px;
-	height: 550px;
-	background: #f9f8f9;
+	width: 100%;
+	height:80%;
 	border-right-width: 1.5px;
 	border-right-color: #0C9;
 	border-right-style: solid;
 	overflow:hidden;
 	overflow-y: scroll;
+	left:20px;
 }
-#proTitle{
-	position: absolute;
-  width: 20px;
-	height: 600px;
-	top:-100px;
-	background:#0C9;
-}
-#conBox{
-	position: absolute;
-	top:-100px;
-  width: 310px;
-	height: 560px;
-	background: #f9f8f9;
-	left: 1200px;
-	border-left-width: 1.5px;
-	border-left-color: #C90;
-	border-left-style: solid;
-	overflow:hidden;
-	overflow-y: scroll;
-}
-#conTitle{
-	position: absolute;
-  width: 25px;
-	height: 600px;
-	left: 1510px;
-	top:-100px;
-	background:#C90;
-}
+
 .argumentText{
 	list-style-type: none;
 }
 .argumentText li{
-	font-size:14px;
+	font-size:15px;
 	margin-bottom: 25px;
 	margin-right: 8px;
 	margin-left: -20px;
@@ -269,13 +243,14 @@ input[type=checkbox]:checked+label{
 
 .argumentText a{
 	text-decoration: none;
-	color: gray;
 }
 
-#proBox ul li a:hover{
+#checkBox ul li a:hover{
 	color: #0c9 !important;
 }
 
-#conBox ul li a:hover{
-	color: #c90 !important;
+.snippet{
+	margin: 0px;
+	font-size: 13px;
+	color:#222;
 }

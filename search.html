@@ -152,41 +152,44 @@
 		//d3.text("topic_dist_per_doc.txt",function(error,data){
 			//console.log(data);
 			cleanSvg();
+			d3.select(".argumentText").remove();
 
 			var results=data.results;
 			//console.log(results);
-
 			var stance=[];
 			var score=[];
 			var topicsVector=[];
 			var title=[];
+			var premise=[];
 			var url=[];
 			for(var i=0;i<results.length;i++){
 				stance[i]=results[i].stance;
 				score[i]=results[i].score;
 				topicsVector[i]=results[i].topics;
 				title[i]=results[i].title;
+				premise[i]=results[i].premise;
 				url[i]=results[i].url;
 			}
 			//console.log(stance);
 			//console.log(score);
 			//console.log(topicsVector);
+			//console.log(results);
 
 			var topicsNum=getTopicsNum(topicsVector);
 			//console.log(topicsNum);
 			var preparedLabels=setLabel(topicsNum);
 			//console.log(preparedLabels);
 			var checkedTopics=topicsSelection();
-			//console.log(checkedTopics);
+			console.log(checkedTopics);
 			var verticesNumber=checkedTopics.length;
 			//console.log(verticesNumber);
 
 			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
 			//console.log(processedLabel);
 			var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
-			console.log(processedWeight);
+			//console.log(processedWeight);
 			var processedData=argumentAfterTopicSelection(processedWeight);
-			console.log(processedData);
+			//console.log(processedData);
 
 			function getTopicsNum(argumentData){
 				var arrayTopic=[]
@@ -275,7 +278,9 @@
 						score:score[i],
 						stance:stance[i],
 						title:title[i],
-						url:url[i]
+						premise:premise[i],
+						url:url[i],
+						id:i
 					})
 				}
 				processedData=processedData.filter(remove)
@@ -344,6 +349,7 @@
 		prepare();
 		d3.text("topic_dist_per_doc.txt",function(data){
 			var argumentData=getArgumentData(data);
+
 			var topicsNum=getTopicsNum(argumentData);
 			var processedData=getProcessedData(argumentData,topicsNum);
 			//console.log(processedData);
@@ -438,24 +444,55 @@
 
 		prepare();
 		polygonCheck();
+		checkBox();
 
-		for(var i=0;i<labels.length;i++){
-		 	var subCheckbox=document.createElement("input");
-			subCheckbox.type="checkbox";
-			subCheckbox.class="checkbox"
-			subCheckbox.name="topic";
-			subCheckbox.value=labels[i];
-			subCheckbox.id="id"+i;
-			subCheckbox.class="box";
-			subCheckbox.checked="checked";
-			subCheckbox.onclick=polygonCheck;
-	   	document.getElementById("checkbox").appendChild(subCheckbox);
+		function checkBox(){
+			var listCheck=document.createElement("ul");
+			listCheck.id="listCheck";
+			document.getElementById("checkbox").appendChild(listCheck)
+			for(var i=0;i<labels.length;i++){
+				var item=document.createElement("li");
+				item.id="checkboxList"+i
+			 	var subCheckbox=document.createElement("input");
+				item.appendChild(subCheckbox);
+				subCheckbox.type="checkbox";
+				subCheckbox.class="checkbox"
+				subCheckbox.name="topic";
+				subCheckbox.value=labels[i];
+				subCheckbox.id="id"+i;
+				subCheckbox.class="box";
+				subCheckbox.checked="checked";
+				subCheckbox.onclick=polygonCheck;
 
-			var label=document.createElement("label");
-			label.htmlFor=labels[i];
-	 	  label.appendChild(document.createTextNode(labels[i]));
-			document.getElementById("checkbox").appendChild(label);
-		 }
+				listCheck.appendChild(item);
+				var label=document.createElement("label");
+				label.htmlFor=labels[i];
+		 	  label.appendChild(document.createTextNode(labels[i]));
+				document.getElementById("checkboxList"+i).appendChild(label);
+			 }
+		}
+
+		 // for(var i=0;i<labels.length;i++){
+ 		 // 	var labelCheckbox=document.createElement("label");
+			// labelCheckbox.className="checkboxContainer";
+			// labelCheckbox.htmlFor=labels[i];
+			// labelCheckbox.id="labelId"+i;
+			// labelCheckbox.appendChild(document.createTextNode(labels[i]));
+			// document.getElementById("checkbox").appendChild(labelCheckbox);
+		 //
+			// var subCheckbox=document.createElement("input");
+			// subCheckbox.type="checkbox";
+ 			// subCheckbox.name="topic";
+ 			// subCheckbox.value=labels[i];
+ 			// subCheckbox.id="id"+i;
+ 			// subCheckbox.checked="checked";
+ 			// subCheckbox.onclick=polygonCheck;
+ 	   // 	document.getElementById("labelId"+i).appendChild(subCheckbox);
+		 //
+			// var spanClass=document.createElement("span");
+			// spanClass.className="checkmark";
+			// document.getElementById("labelId"+i).appendChild(spanClass);
+ 		 // }
 
 
 		function prepare(){
@@ -473,21 +510,10 @@
  			document.getElementById("barycentric").appendChild(checkbox);
  			checkbox.setAttribute("id","checkbox");
 
-			var proBox=document.createElement("div");
-			document.getElementById("barycentric").appendChild(proBox);
-			proBox.setAttribute("id","proBox");
+			var overall=document.createElement("div");
+			document.getElementById("barycentric").appendChild(overall);
+			overall.setAttribute("id","overall")
 
-			var proTitle=document.createElement("div");
-			document.getElementById("barycentric").appendChild(proTitle);
-			proTitle.setAttribute("id","proTitle");
-
-			var conBox=document.createElement("div");
-			document.getElementById("barycentric").appendChild(conBox);
-			conBox.setAttribute("id","conBox");
-
-			var conTitle=document.createElement("div");
-			document.getElementById("barycentric").appendChild(conTitle);
-			conTitle.setAttribute("id","conTitle");
  			}
 	}
 </script>
