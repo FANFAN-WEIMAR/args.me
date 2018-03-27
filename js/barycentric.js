@@ -7,7 +7,6 @@
       var stance=getStance(processedData);
       var argumentList=getTitle(processedData);
 
-      console.log(rowData);
       var col=rowData[0].length;
       var row=rowData.length;
 
@@ -18,7 +17,6 @@
       var argument=processedArgument(rowData,data,score,stance,processedData);
 
       var circles=data.concat(argument);
-      console.log(processedData);
 
       document.getElementById('overall').appendChild(listArgument(argumentList,data,circles));
       //brush();
@@ -389,8 +387,6 @@
            y2=y1+Math.abs(_y - startY)
       }
 
-
-
       document.onmousemove = function() {
         if (down){
         evt = window.event || arguments[0];
@@ -423,7 +419,6 @@
 
             for(j=0;j<argumentList.length;j++){
               if(argumentList[j].id==id){
-                console.log(id);
                 title=argumentList[j];
                 selList.push(title);
               }
@@ -431,9 +426,6 @@
           }
         }
         selList=_.uniq(selList);
-        console.log(selList);
-        console.log(argumentList);
-        console.log(argument);
         isSelect = false;
         d3.selectAll("#selectDiv").remove();
         if(selList.length>0){
@@ -469,6 +461,7 @@
             .attr("d",arrow_path)
             .attr("fill","black");
 
+      console.log(argument);
       var nodes=g.selectAll('circle')
             .data(circles)
             .enter()
@@ -504,53 +497,107 @@
               }
             })
             .on('mouseover',function(d,i){
+              if(d.overlap==1){
+                var check=d.polygon.length;
+                var points=d.polygon;
+                console.log(points);
+                var stance=d.stance;
+                var id=d.id;
+  							d3.select(this)
+                  .attr("fill",function(d){
+                    if(stance==true){
+                      return  "#0c9";
+                    }else if(stance==false){
+                      return  '#c90';
+                    }
+                  })
+                  .attr("opacity",1)
+                  .attr('r',function(d,i){
+                    return d.overlap*10;
+                  })
+                  .style("stroke","white")
+                  .style("stroke-width",2);
+                var item = document.getElementById("args"+id);
+                if(item!=null){item.focus();}
+                if(check>=6){
+                  var  drawPolygon=g.append("polygon")
+                    .style("stroke", "#0c9")  // colour the line
+                    .style("fill", "black")
+                    .style("opacity",0.2)    // remove any fill colour
+                    .attr("points", function(d){return points;})
+                    .attr('stroke-width',5)
+                    .attr("class","highlight");  // x,y points
 
-              var check=d.polygon.length;
-              var points=d.polygon;
-              var stance=d.stance;
-              var id=d.id;
-							d3.select(this)
-                .attr("fill",function(d){
-                  if(stance==true){
-                    return  "#0c9";
-                  }else if(stance==false){
-                    return  '#c90';
-                  }
-                })
-                .attr("opacity",1)
-                .attr('r',function(d,i){
-                  return d.overlap*10;
-                })
-                .style("stroke","white")
-                .style("stroke-width",2);
+                }else if(check>2){
+                  var drawLine=g.append("line")
+                    .attr('x1',function(d){return points[0];})
+                    .attr('y1',function(d){return points[1];})
+                    .attr('x2',function(d){return points[2];})
+                    .attr('y2',function(d){return points[3];})
+                    .attr("class","highlight")
+                    .attr('stroke-width',5)
+                    .style("stroke", "#0c9")
+                    .style("opacity",0.2);
+                }
+                var previous = d3.select(".points").node();
+                var current=d3.select(".highlight").node();
+                current.parentNode.insertBefore(current, previous);
 
-              //console.log(stance);
-              var item = document.getElementById("args"+id);
-              if(item!=null){item.focus();}
-              if(check>=6){
-                var  drawPolygon=g.append("polygon")
-                  .style("stroke", "#0c9")  // colour the line
-                  .style("fill", "black")
-                  .style("opacity",0.2)    // remove any fill colour
-                  .attr("points", function(d){return points;})
-                  .attr('stroke-width',5)
-                  .attr("class","highlight");  // x,y points
+              // }else if(d.overlap>=3){
+              //   var overlapPolygon=polygonGraph(80,d.overlap);
+              //   var points=[];
+              //
+              //   for(var i=0;i<overlapPolygon.length;i++){
+              //     points.push(overlapPolygon[i].x+d.x, overlapPolygon[i].y+d.y)
+              //   }
+              //
+              //   var x=d.x;
+              //   var y=d.y;
+              //   var selectedItem=[];
+              //   for (var i=0; i<argument.length; i++){
+              //     if(x==argument[i].x && y==argument[i].y){
+              //       selectedItem.push(argument[i]);
+              //     }
+              //   }
+              //   for(var i=0;i<selectedItem.length;i++){
+              //     selectedItem[i].x=points[2*i];
+              //     selectedItem[i].y=points[2*i+1];
+              //   }
+              //
+              //   for(var i=0;i<selectedItem.length;i++){
+              //     var circle=g.append('circle')
+              //       .attr("class","subPolygon")
+              //       .attr('r',function(d){ return 5; })
+              //       .attr('cx',function(d){return selectedItem[i].x;})
+              //       .attr('cy',function(d){return selectedItem[i].y;})
+              //       .attr('fill',function(d,i){
+              //         if(selectedItem[i].stance==true){
+              //             return '#0C9';
+              //           }else{
+              //             return '#C90';
+              //           }
+              //       })
+              //       .attr('opacity',function(d){return selectedItem[i].score/25;});
+              //   }
+              //
+              //   var  drawPolygon=g.append("polygon")
+              //     .style("stroke", "#0c9")  // colour the line
+              //     .style("fill", "black")
+              //     .style("opacity",0.2)    // remove any fill colour
+              //     .attr("points", function(d){return points;})
+              //     .attr('stroke-width',2)
+              //     .attr("id","subPolygon")
+              //     .on("mouseout", function(d){
+              //        d3.select("#subPolygon").remove();
+              //     });  // x,y points
+              //   var previous = d3.select(".points").node();
+              //   var current=d3.select("#subPolygon").node();
+              //   current.parentNode.insertBefore(current, previous);
+              // var previous = d3.select(".points").node();
+              // var current=d3.select(".subPolygon").node();
+              // current.parentNode.insertBefore(current, previous);
 
-              }else if(check>2){
-                var drawLine=g.append("line")
-                  .attr('x1',function(d){return points[0];})
-                  .attr('y1',function(d){return points[1];})
-                  .attr('x2',function(d){return points[2];})
-                  .attr('y2',function(d){return points[3];})
-                  .attr("class","highlight")
-                  .attr('stroke-width',5)
-                  .style("stroke", "#0c9")
-                  .style("opacity",0.2);
               }
-              var previous = d3.select(".points").node();
-              var current=d3.select(".highlight").node();
-              current.parentNode.insertBefore(current, previous);
-
 						})
             .on('mouseout',function(d,i){
               var stance=d.stance;
@@ -574,14 +621,21 @@
 							})
             .on('click',function(d){
               d3.select(".argumentText").remove();
-              var id=d.id;
+              var x=d.x;
+              var y=d.y;
               var selectedItem=[];
-              for(i=0;i<argumentList.length;i++){
-                if(id==argumentList[i].id){
-                  var title=argumentList[i];
-                  selectedItem.push(title);
+              for (var i=0; i<argument.length; i++){
+                if(x==argument[i].x && y==argument[i].y){
+                  var id=argument[i].id;
+                  for(j=0;j<argumentList.length;j++){
+                    if(id==argumentList[j].id){
+                      var title=argumentList[j];
+                      selectedItem.push(title);
+                    }
+                  }
                 }
               }
+
               document.getElementById('overall').appendChild(listArgument(selectedItem,data,circles));
             });
 
