@@ -1,7 +1,8 @@
 (function(barycentric) {
 
-    polygon = function(processedData,element,radius,verticesNumber,labels,score){
+    polygon = function(processedData,element,radius,labels){
 
+      let verticesNumber = labels.length;
       var rowData=getWeight(processedData);
       var score=getScore(processedData);
       var stance=getStance(processedData);
@@ -13,9 +14,9 @@
       document.getElementById('conBox').appendChild(listArgument(conTitle));
 
       rowData = processedData.map(function (arg) {
-        return arg.topics;
+        return arg.topics.map(o => o.weight);
       });
-      console.log(rowData);
+      // console.log(rowData);
 
       var col=rowData[0].length;
       var row=rowData.length;
@@ -25,7 +26,7 @@
       var topicsLabel=wordCloud(215,labels);
       var rowData=mean(rowData);
       var argument=processedArgument(rowData,data,score,stance);
-      console.log(argument);
+      // console.log(argument);
 
       function polygonGraph(radius,verticesNumber){
         var vertices=[];
@@ -266,7 +267,7 @@
 
 
       var circles=data.concat(argument);
-      console.log(circles);
+      // console.log(circles);
 
       var defs = g.append("defs");
 
