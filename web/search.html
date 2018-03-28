@@ -16,6 +16,8 @@
 
 <script type="text/javascript">
 
+
+  var globalData;
   function startSearch() {
     if (searchText.value === "") {
       console.log('value not set ');
@@ -224,6 +226,8 @@
 
 
   function polygonCheck(content, data){
+    if(data === undefined) {
+      data = globalData;
     }
 
 
