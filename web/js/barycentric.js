@@ -1,26 +1,25 @@
 (function(barycentric) {
 
     polygon = function(processedData,element,radius,verticesNumber,labels,score){
-
       var rowData=getWeight(processedData);
+      var rowData=mean(rowData);
       var score=getScore(processedData);
       var stance=getStance(processedData);
-      var conTitle=getConTitle(processedData);
-      var proTitle=getProTitle(processedData);
-      //console.log(conTitle);
-      //console.log(proTitle);
-      document.getElementById('proBox').appendChild(listArgument(proTitle));
-      document.getElementById('conBox').appendChild(listArgument(conTitle));
+      var argumentList=getTitle(processedData);
 
       var col=rowData[0].length;
       var row=rowData.length;
 
       var data=polygonGraph(radius,verticesNumber);
-      //console.log(data);
-      var topicsLabel=wordCloud(215,labels);
-      var rowData=mean(rowData);
-      var argument=processedArgument(rowData,data,score,stance);
-      console.log(argument);
+
+      var topicsLabel=wordCloud(201,labels);
+
+      var argument=processedArgument(rowData,data,score,stance,processedData);
+
+      var circles=data.concat(argument);
+
+      document.getElementById('overall').appendChild(listArgument(argumentList,data,circles));
+      //brush();
 
       function polygonGraph(radius,verticesNumber){
         var vertices=[];
@@ -42,7 +41,7 @@
          return vertices;
       }
 
-      function wordDisplay(width,height,id){
+      function wordDisplay(width,height,x,y){
 
         var fill = d3.scale.category20();
 
@@ -63,15 +62,16 @@
 
         function draw(words) {
           var drawWords=svg.append("svg")
-              .attr("transform", "translate(" + id*layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+              .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
               .attr("width", layout.size()[0])
               .attr("height", layout.size()[1])
+              .attr("x",function(){return x+230})
+              .attr("y",function(){return y+270})
             .append("g")
               .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 +")")
             .selectAll("text")
               .data(words)
             .enter().append("text")
-              .attr("class","class"+id)
               .style("font-size", function(d) { return d.size + "px"; })
               .style("font-family", "Impact")
               .style("fill", function(d, i) { return fill(i); })
@@ -102,7 +102,7 @@
         return rowData;
       }
 
-      function processedArgument(rowData,data,score,stance){
+      function processedArgument(rowData,data,score,stance,processedData){
         var argumentWeight=[];
         for(var a=0;a<row;a++){
           var xValue=0,yValue=0;
@@ -122,7 +122,7 @@
               maxIndex = b;
             }
 
-
+            //polygon.push(data[b].x*rowData[a][b], data[b].y*rowData[a][b])
             if(rowData[a][b]>0){
               polygon.push(data[b].x, data[b].y)
             }
@@ -140,11 +140,10 @@
             score:score[a],
             stance:stance[a],
             polygon:polygon,
-            id:a
+            id:processedData[a].id,
           })
         }
         //console.log(argumentWeight);
-
         for(var a=0;a<row;a++){
           for(var b=0;b<row;b++){
             if(a!=b){
@@ -203,54 +202,239 @@
         return stance;
       }
 
-      function getConTitle(processedData){
+      function getTitle(processedData){
         var title=[];
         for(var i=0;i<processedData.length;i++){
-          if(processedData[i].stance==false){
-              title.push({index:i,title:processedData[i].title,url:processedData[i].url});
-          }
+          title.push({
+            id:processedData[i].id,
+            title:processedData[i].title,
+            url:processedData[i].url,
+            score:processedData[i].score,
+            stance:processedData[i].stance,
+            premise:processedData[i].premise,
+          });
         }
         title=_.sortBy(title,'score');
         title=title.reverse();
         return title;
       }
 
-      function getProTitle(processedData){
-        var title=[];
-        for(var i=0;i<processedData.length;i++){
-          if(processedData[i].stance==true){
-              title.push({
-                index:i,
-                title:processedData[i].title,
-                url:processedData[i].url,
-                score:processedData[i].score
-              });
-          }
-        }
-        title=_.sortBy(title,'score');
-        title=title.reverse();
-        return title;
-      }
-
-      function listArgument(arr){
-
+      function listArgument(arr,data,circles){
         var list=document.createElement('ul');
         list.setAttribute('class',"argumentText");
         for(var i=0;i<arr.length;i++){
           var item=document.createElement('li');
+
+          var divArticle=document.createElement("div");
+          var article=document.createElement("article");
           var a=document.createElement("a");
-          //item.appendChild(document.createTextNode(arr[i].title));
-          item.appendChild(a);
-          a.setAttribute('id',"args"+arr[i].index);
+          var snippet=document.createElement("p");
+
+          item.appendChild(divArticle);
+          divArticle.appendChild(article);
+          article.appendChild(a);
+          article.appendChild(snippet);
+
+          divArticle.style.width="600px";
+          divArticle.setAttribute("class","article");
+
+          a.setAttribute('id',"args"+arr[i].id);
           a.setAttribute('class',"args");
           a.setAttribute('href',arr[i].url);
-
           a.textContent=arr[i].title;
+          snippet.innerHTML=arr[i].premise;
+          snippet.setAttribute('class','snippet');
+
+          a.addEventListener("mouseover",function(event){
+            event.target.focus();
+            var id=parseInt(event.target.id.replace(/\D/g,''));
+            var check=circles[data.length+id].polygon.length;
+
+            var points=circles[data.length+id].polygon;
+            var stance=circles[data.length+id].stance;
+            var overlap=circles[data.length+id].overlap;
+            var x=circles[data.length+id].x;
+            var y=circles[data.length+id].y;
+            var px=circles[data.length+id].px;
+            var py=circles[data.length+id].py;
+            console.log(circles);
+            if(check>=6){
+              var  drawPolygon=g.append("polygon")
+                .style("stroke", "#0c9")  // colour the line
+                .style("fill", "black")
+                .style("opacity",0.2)    // remove any fill colour
+                .attr("points", function(d){return points;})
+                .attr('stroke-width',5)
+                .attr("class","highlight");  // x,y points
+            }else if(check>2){
+              var drawLine=g.append("line")
+                .attr('x1',function(d){return points[0];})
+                .attr('y1',function(d){return points[1];})
+                .attr('x2',function(d){return points[2];})
+                .attr('y2',function(d){return points[3];})
+                .attr("class","highlight")
+                .attr('stroke-width',5)
+                .style("stroke", "#0c9")
+                .style("opacity",0.2);
+            }
+            var repPoint=g.append("circle")
+                .attr('cx',function(d){return parseFloat(x);})
+                .attr('cy',function(d){return parseFloat(y);})
+                .attr("class","highlight")
+                .attr("fill",function(d){
+                  if(stance==true){
+                    return  "#0c9";
+                  }else if(stance==false){
+                    return  '#c90';
+                  }
+                })
+                .attr("opacity",1)
+                .attr('r',function(d){
+                  return overlap*10;
+                })
+                .style("stroke","white")
+                .style("stroke-width",2);
+            var arrow=g.append('line')
+                .attr('x1',function(d){return x;})
+                .attr('y1',function(d){return y;})
+                .attr("class","highlight")
+                .attr('x2',function(d){
+                    var distanceX=px-x;
+                    if(distanceX!=0){
+                      var directionX=(px-x)/Math.abs(px-x);
+                      return x+0.01*directionX;
+                    }else{
+                      return px;
+                    }
+                  })
+                .attr('y2',function(d){
+                    var distanceX=px-x;
+                    var distanceY=py-y;
+                    if(distanceX<0.001){
+                      distanceX=0;
+                    }
+                    if(distanceX!=0 && distanceY!=0){
+                      var directionY=(py-y)/Math.abs(py-y);
+                      return y+Math.abs(distanceY/distanceX)*directionY*0.01;
+                    }else if(distanceX!=0 && distanceY==0){
+                      return py;
+                    }else if(distanceX==0 && distanceY!=0){
+                      var directionY=(py-y)/Math.abs(py-y);
+                      return y+directionY*0.01;
+                    }else{
+                      return py;
+                    }
+                  })
+                .attr('stroke','gray')
+                .attr('stroke-width',2)
+                .attr("marker-start",function(d){return "url(#arrow)";})
+                .style("opacity",1);
+            var previous = d3.select(".points").node();
+            var current=d3.select(".highlight").node();
+            current.parentNode.insertBefore(current, previous);
+          });
+
+          a.addEventListener("mouseout",function(event){
+            d3.selectAll(".highlight").remove();
+          })
+
+          var stance=arr[i].stance;
+          if(stance==true){
+            a.style.color="#0c9";
+          }else if(stance==false){
+            a.style.color="#c90";
+          }
           list.appendChild(item);
         }
         return list;
       }
 
+
+      function brush(argument,argumentList){
+
+        var down = false;
+        var selDiv;
+        var startX;
+        var startY;
+
+        var x1;
+        var x2;
+        var y1;
+        var y2;
+        var selList = [];
+
+        document.onmousedown=function(){
+          down = true;
+          var isSelect = true;
+          var evt = window.event || arguments[0];
+           startX = (evt.x || evt.clientX);
+           startY = (evt.y || evt.clientY);
+          selDiv = document.createElement("div");
+          document.body.appendChild(selDiv);
+
+          selDiv.style.cssText = "position:absolute;width:0px;height:0px;border:1px;background-color:#C3D5ED;z-index:1000;opacity:0.6";
+          selDiv.id = "selectDiv";
+
+          selDiv.style.left = startX + "px";
+          selDiv.style.top = startY + "px";
+
+          var _x = null;
+          var _y = null;
+
+           x1= Math.min(_x, startX);
+           x2=x1+ Math.abs(_x - startX);
+           y1= Math.min(_y, startY);
+           y2=y1+Math.abs(_y - startY)
+      }
+
+      document.onmousemove = function() {
+        if (down){
+        evt = window.event || arguments[0];
+          if (selDiv.style.display == "none") {
+            selDiv.style.display = "";
+          }
+          _x = (evt.x || evt.clientX);
+          _y = (evt.y || evt.clientY);
+          selDiv.style.left = Math.min(_x, startX) + "px";
+          selDiv.style.top = Math.min(_y, startY) + "px";
+          selDiv.style.width = Math.abs(_x - startX) + "px";
+          selDiv.style.height = Math.abs(_y - startY) + "px";
+
+           x1= Math.min(_x, startX);
+           x2=x1+ Math.abs(_x - startX);
+           y1= Math.min(_y, startY);
+           y2=y1+Math.abs(_y - startY);
+          //console.log(x1,x2,y1,y2);
+        }}
+      document.onmouseup = function() {
+        down = false;
+
+        for(var i=0;i<argument.length;i++){
+          var pointX=argument[i].x+1000;
+          var pointY=argument[i].y+400;
+          var id=argument[i].id;
+          var title;
+
+          if(pointX<=x2 && pointX>=x1 && pointY<=y2 && pointY>=y1){
+
+            for(j=0;j<argumentList.length;j++){
+              if(argumentList[j].id==id){
+                title=argumentList[j];
+                selList.push(title);
+              }
+            }
+          }
+        }
+        selList=_.uniq(selList);
+        isSelect = false;
+        d3.selectAll("#selectDiv").remove();
+        if(selList.length>0){
+          d3.select(".argumentText").remove();
+          document.getElementById('overall').appendChild(listArgument(selList,data,circles));
+        }
+        selList = [], _x = null, _y = null, selDiv = null, startX = null, startY = null, evt = null;
+      }
+      }
       // draw the polygon
       var svg = element.append("svg")
           .attr("width", radius*3)
@@ -258,10 +442,6 @@
 
       var g = svg.append('g')
           .attr('transform', "translate(" + radius*1.5 + " " + radius*1.5 + ")");
-
-
-      var circles=data.concat(argument);
-      console.log(circles);
 
       var defs = g.append("defs");
 
@@ -281,17 +461,18 @@
             .attr("d",arrow_path)
             .attr("fill","black");
 
+      console.log(argument);
       var nodes=g.selectAll('circle')
             .data(circles)
             .enter()
             .append('svg:circle')
             .attr("class","points")
             .attr('r',function(d){ return d.overlap*5; })
-            .attr('cx',function(d){return parseFloat(d.x);})
-            .attr('cy',function(d){return parseFloat(d.y);})
+            .attr('cx',function(d){return d.x;})
+            .attr('cy',function(d){return d.y;})
             .attr('id',function(d,i){
               if(i>=data.length){
-                return 'circle'+(i-data.length);
+                return 'circle'+d.id;
               }else{
                 return 'vertices'
               }
@@ -316,93 +497,146 @@
               }
             })
             .on('mouseover',function(d,i){
-							d3.select(this)
-                .attr("fill","#C90")
-                .attr("opacity",1)
-                .attr('r',function(d,i){
-                  return d.overlap*5;
-                });
-              var check=d.polygon.length;
-              var points=d.polygon;
-              var stance=d.stance;
-              var id=d.id;
-              //console.log(stance);
-              if(stance==true){
-                document.getElementById("args"+id).style.color = "#0c9";
-              }else if(stance==false){
-                document.getElementById("args"+id).style.color = '#c90';
-              }
+              if(d.overlap==1){
+                var check=d.polygon.length;
+                var points=d.polygon;
+                console.log(points);
+                var stance=d.stance;
+                var id=d.id;
+  							d3.select(this)
+                  .attr("fill",function(d){
+                    if(stance==true){
+                      return  "#0c9";
+                    }else if(stance==false){
+                      return  '#c90';
+                    }
+                  })
+                  .attr("opacity",1)
+                  .attr('r',function(d,i){
+                    return d.overlap*10;
+                  })
+                  .style("stroke","white")
+                  .style("stroke-width",2);
+                var item = document.getElementById("args"+id);
+                if(item!=null){item.focus();}
+                if(check>=6){
+                  var  drawPolygon=g.append("polygon")
+                    .style("stroke", "#0c9")  // colour the line
+                    .style("fill", "black")
+                    .style("opacity",0.2)    // remove any fill colour
+                    .attr("points", function(d){return points;})
+                    .attr('stroke-width',5)
+                    .attr("class","highlight");  // x,y points
 
-              if(check>=6){
-                var  drawPolygon=g.append("polygon")
-                  .style("stroke", "#0c9")  // colour the line
-                  .style("fill", "black")
-                  .style("opacity",0.2)    // remove any fill colour
-                  .attr("points", function(d){return points;})
-                  .attr('stroke-width',5)
-                  .attr("class","highlight");  // x,y points
+                }else if(check>2){
+                  var drawLine=g.append("line")
+                    .attr('x1',function(d){return points[0];})
+                    .attr('y1',function(d){return points[1];})
+                    .attr('x2',function(d){return points[2];})
+                    .attr('y2',function(d){return points[3];})
+                    .attr("class","highlight")
+                    .attr('stroke-width',5)
+                    .style("stroke", "#0c9")
+                    .style("opacity",0.2);
+                }
+                var previous = d3.select(".points").node();
+                var current=d3.select(".highlight").node();
+                current.parentNode.insertBefore(current, previous);
 
-              }else if(check>2){
-                var drawLine=g.append("line")
-                  .attr('x1',function(d){return points[0];})
-                  .attr('y1',function(d){return points[1];})
-                  .attr('x2',function(d){return points[2];})
-                  .attr('y2',function(d){return points[3];})
-                  .attr("class","highlight")
-                  .attr('stroke-width',5)
-                  .style("stroke", "#0c9")
-                  .style("opacity",0.2);
+              // }else if(d.overlap>=3){
+              //   var overlapPolygon=polygonGraph(80,d.overlap);
+              //   var points=[];
+              //
+              //   for(var i=0;i<overlapPolygon.length;i++){
+              //     points.push(overlapPolygon[i].x+d.x, overlapPolygon[i].y+d.y)
+              //   }
+              //
+              //   var x=d.x;
+              //   var y=d.y;
+              //   var selectedItem=[];
+              //   for (var i=0; i<argument.length; i++){
+              //     if(x==argument[i].x && y==argument[i].y){
+              //       selectedItem.push(argument[i]);
+              //     }
+              //   }
+              //   for(var i=0;i<selectedItem.length;i++){
+              //     selectedItem[i].x=points[2*i];
+              //     selectedItem[i].y=points[2*i+1];
+              //   }
+              //
+              //   for(var i=0;i<selectedItem.length;i++){
+              //     var circle=g.append('circle')
+              //       .attr("class","subPolygon")
+              //       .attr('r',function(d){ return 5; })
+              //       .attr('cx',function(d){return selectedItem[i].x;})
+              //       .attr('cy',function(d){return selectedItem[i].y;})
+              //       .attr('fill',function(d,i){
+              //         if(selectedItem[i].stance==true){
+              //             return '#0C9';
+              //           }else{
+              //             return '#C90';
+              //           }
+              //       })
+              //       .attr('opacity',function(d){return selectedItem[i].score/25;});
+              //   }
+              //
+              //   var  drawPolygon=g.append("polygon")
+              //     .style("stroke", "#0c9")  // colour the line
+              //     .style("fill", "black")
+              //     .style("opacity",0.2)    // remove any fill colour
+              //     .attr("points", function(d){return points;})
+              //     .attr('stroke-width',2)
+              //     .attr("id","subPolygon")
+              //     .on("mouseout", function(d){
+              //        d3.select("#subPolygon").remove();
+              //     });  // x,y points
+              //   var previous = d3.select(".points").node();
+              //   var current=d3.select("#subPolygon").node();
+              //   current.parentNode.insertBefore(current, previous);
+              // var previous = d3.select(".points").node();
+              // var current=d3.select(".subPolygon").node();
+              // current.parentNode.insertBefore(current, previous);
+
               }
-              var previous = d3.select(".points").node();
-              var current=d3.select(".highlight").node();
-              current.parentNode.insertBefore(current, previous);
 						})
             .on('mouseout',function(d,i){
               var stance=d.stance;
               var id=d.id;
+              // document.getElementById('args'+id).blur();
 							d3.select(this)
-                .attr('fill',function(d,i){
+                .attr('fill',function(d){
                   if(stance==true){
                     return '#0C9';
                   }else{
                     return '#C90';
                   }
                 })
-                .attr('r',function(d,i){
+                .attr('r',function(d){
                   return d.overlap*5;
                 })
                 .attr('opacity',function(d){
                   return d.score/25;
-                });
-
+                })
               d3.select(".highlight").remove();
-              d3.selectAll(".args").style('color','gray');
 							})
             .on('click',function(d){
-              var text=d.overlap;
+              d3.select(".argumentText").remove();
               var x=d.x;
               var y=d.y;
+              var selectedItem=[];
+              for (var i=0; i<argument.length; i++){
+                if(x==argument[i].x && y==argument[i].y){
+                  var id=argument[i].id;
+                  for(j=0;j<argumentList.length;j++){
+                    if(id==argumentList[j].id){
+                      var title=argumentList[j];
+                      selectedItem.push(title);
+                    }
+                  }
+                }
+              }
 
-              var rectangle=g.append("rect")
-                 .attr("x", function(d) { return x-10; })
-                 .attr("y", function(d) { return y-10;  })
-                 .attr("width", function(d) { return 20; })
-                 .attr("height", function(d) { return 20; })
-                 .attr("fill","black")
-                 .style("opacity",0.5)
-                 .on("click", function(){
-                     d3.select(this).remove();
-                     d3.select("#NOAid").remove();
-                 });
-
-              var argument=g.append("text")
-                .text(function(d){return text})
-                .attr("x",function(d){return x;})
-                .attr("y",function(d){return y+5;})
-                .attr("fill","#FFF")
-                .attr("text-anchor","middle")
-                .attr("id","NOAid");
-
+              document.getElementById('overall').appendChild(listArgument(selectedItem,data,circles));
             });
 
       var rect=svg.selectAll('rect')
@@ -428,7 +662,7 @@
             .text(function(d){return d.label;});
 
       for(var i=0;i<topicsLabel.length;i++){
-          wordDisplay(130,50,i);
+          wordDisplay(140,50,topicsLabel[i].x,topicsLabel[i].y);
       }
 
       var line=g.selectAll('line')
@@ -442,7 +676,7 @@
                 var distanceX=d.px-d.x;
                 if(distanceX!=0){
                   var directionX=(d.px-d.x)/Math.abs(d.px-d.x);
-                  return d.x+0.1*directionX;
+                  return d.x+0.01*directionX;
                 }else{
                   return d.px;
                 }
@@ -458,12 +692,12 @@
                 }
                 if(distanceX!=0 && distanceY!=0){
                   var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
-                  return d.y+Math.abs(distanceY/distanceX)*directionY*0.1;
+                  return d.y+Math.abs(distanceY/distanceX)*directionY*0.01;
                 }else if(distanceX!=0 && distanceY==0){
                   return d.py;
                 }else if(distanceX==0 && distanceY!=0){
                   var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
-                  return d.y+directionY*0.1;
+                  return d.y+directionY*0.01;
                 }else{
                   return d.py;
                 }
@@ -481,8 +715,7 @@
             })
             .style("opacity",1);
 
-
-
+      brush(argument,argumentList);
    }
 
 }(window.barycentric = window.barycentric || {}));

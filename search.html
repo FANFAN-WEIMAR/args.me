@@ -1,0 +1,555 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css/search.css"/>
+<title>Results</title>
+
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
+<script src="js/mds.js"></script>
+<script src="js/barycentric.js"></script>
+<script src="js/lodash.js"></script>
+<script src="js/d3.layout.cloud.js"></script>
+
+<script type="text/javascript">
+
+	window.onload=function(){
+		var queryString=window.location.search.replace(/^\?q=/,'');
+    var queryString=queryString.split("&",1);
+		searchText.placeholder=queryString;
+		tabOpenBarycentric();
+
+		//tabOpenProCon();
+		//search(queryString);
+    //polygonCheck();
+	}
+
+
+</script>
+
+<script type="text/javascript">
+
+	var labels = [
+			'Economy',
+			'Society',
+			'Education',
+			'Culture',
+			'Environment',
+			'Human Right'];
+
+</script>
+
+<script type="text/javascript">
+
+	function euclidean(cityData){
+
+		var cityPositions = numeric.transpose(mds.classic(cityData));
+		// console.log(mds.classic(cityData));
+		// console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth - 20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+	function KL(cityData){
+		var cityPositions = numeric.transpose(mds.KL(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#KLDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+	function Cosin(cityData){
+		var cityPositions = numeric.transpose(mds.Cosin(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+
+
+</script>
+
+<script type="text/javascript">
+
+	function searchQuery(){
+		var searchValue=document.getElementById('searchText').value;
+		if(searchValue==""){
+			var searchValue=window.location.search.replace(/^\?q=/,'');
+			var searchValue=searchValue.split("&",1);
+		}
+		search(searchValue);
+	}
+
+	function search(searchValue){
+		var apiURL="http://141.54.172.105:8081/api/v1/_search?query=" + searchValue ;
+		$.getJSON(apiURL,function(data){
+			var length=data.results.length;
+			var conclusion;
+			var stance;
+			var div=document.getElementById('ProVsCon');
+			var divPro=document.getElementById('Pro');
+			var divCon=document.getElementById('Con');
+
+			while(divPro.firstChild){
+				divPro.removeChild(divPro.firstChild);
+			}
+			while(divCon.firstChild){
+				divCon.removeChild(divCon.firstChild);
+			}
+
+			for(var i=0;i<length;i++){
+				conclusion=data.results[i].conclusion;
+				stance=data.results[i].stance;
+				if(stance==true){
+					var iDiv = document.createElement('div');
+					iDiv.innerHTML=conclusion;
+					div.appendChild(iDiv);
+					document.getElementById('Pro').appendChild(iDiv);
+				}else{
+					var iDiv = document.createElement('div');
+					iDiv.innerHTML=conclusion;
+					div.appendChild(iDiv);
+					document.getElementById('Con').appendChild(iDiv);
+				}
+			}
+		})
+	}
+
+  function polygonCheck(){
+		d3.json("data/sampleData.json",function(error,data){
+		//d3.text("topic_dist_per_doc.txt",function(error,data){
+			//console.log(data);
+			cleanSvg();
+			d3.select(".argumentText").remove();
+
+			var results=data.results;
+			//console.log(results);
+			var stance=[];
+			var score=[];
+			var topicsVector=[];
+			var title=[];
+			var premise=[];
+			var url=[];
+			for(var i=0;i<results.length;i++){
+				stance[i]=results[i].stance;
+				score[i]=results[i].score;
+				topicsVector[i]=results[i].topics;
+				title[i]=results[i].title;
+				premise[i]=results[i].premise;
+				url[i]=results[i].url;
+			}
+			//console.log(stance);
+			//console.log(score);
+			//console.log(topicsVector);
+			//console.log(results);
+
+			var topicsNum=getTopicsNum(topicsVector);
+			//console.log(topicsNum);
+			var preparedLabels=setLabel(topicsNum);
+			//console.log(preparedLabels);
+			var checkedTopics=topicsSelection();
+			var verticesNumber=checkedTopics.length;
+			//console.log(verticesNumber);
+
+			var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
+			//console.log(processedLabel);
+			var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVector,topicsNum);
+			//console.log(processedWeight);
+			var processedData=argumentAfterTopicSelection(processedWeight);
+			//console.log(processedData);
+
+			function getTopicsNum(argumentData){
+				var arrayTopic=[]
+				for(var i=0;i<argumentData.length;i++){
+					for(var j=0;j<argumentData[i].length;j++){
+						arrayTopic.push(argumentData[i][j].topic);
+					}
+				}
+				return Math.max.apply(null, arrayTopic);
+			}
+			function setLabel(num){
+				var labelsA=[];
+				for(i=0;i<=num;i++){
+					//labelsA[i]="topic"+(i);
+					labelsA[i]=labels[i];
+				}
+				return labelsA;
+			}
+			function topicsSelection(){
+				var checkedTopics=[];
+				var topics=document.getElementsByName('topic');
+				for(var i=0;i<topics.length;i++){
+					if(topics[i].checked){
+						checkedTopics.push(i);
+					}
+				}
+				return checkedTopics;
+			}
+
+			function topicsAfterTopicSelection(checkedTopics, labels){
+				var processedLabel=[];
+				for(var a=0;a<checkedTopics.length;a++){
+					processedLabel[a]=labels[checkedTopics[a]]
+				}
+				return processedLabel;
+			}
+
+			function weightAfterTopicSelection(checkedTopics,argumentData,topicsNum){
+				var freqArray=[];
+				for(var i=0;i<argumentData.length;i++){
+					freqArray[i]=new Array(topicsNum+1);
+				}
+
+				for(var i=0;i<argumentData.length;i++){
+					for(var k=0;k<argumentData[i].length;k++){
+						for(var j=0;j<=topicsNum;j++){
+							if(j==argumentData[i][k].topic){
+								freqArray[i][j]=argumentData[i][k].weight;
+							}else if(freqArray[i][j]>0){
+								freqArray[i][j]=freqArray[i][j];
+							}else{
+								freqArray[i][j]=0;
+							}
+						}
+					}
+				}
+				//console.log(freqArray);
+
+				var col=freqArray[0].length;
+				var row=freqArray.length;
+
+				var processedWeight=[];
+				for(var i=0;i<row;i++){
+					processedWeight[i]=new Array(checkedTopics.length);
+				}
+
+				for (var a=0;a<row;a++){
+					for (var b=0;b<checkedTopics.length;b++){
+						var n=checkedTopics[b];
+						var m=parseFloat(freqArray[a][n])
+						processedWeight[a][b]=m;
+					}
+				}
+				//processedData=processedData.filter(remove)
+				//console.log(processedData);
+				return processedWeight;
+			}
+
+
+
+			function argumentAfterTopicSelection(processedWeight){
+				var processedData=[];
+				for(var i=0;i<processedWeight.length;i++){
+					processedData.push({
+						weight:processedWeight[i],
+						score:score[i],
+						stance:stance[i],
+						title:title[i],
+						premise:premise[i],
+						url:url[i],
+						id:i
+					})
+				}
+				processedData=processedData.filter(remove)
+				return processedData;
+			}
+
+			function remove(value){
+				var zeroVector=[];
+				for(var i=0;i<value.weight.length;i++){
+					zeroVector[i]=0;
+				}
+				var equalCheck=_.isEqual(value.weight,zeroVector);
+				if(!equalCheck){
+					return true;
+				}
+			}
+
+			function clean(value){
+				if(isNaN(value)){
+					return true;
+				}
+			}
+
+			function cleanSvg(){
+				var Polygon=document.getElementById('polygon');
+				while(Polygon.firstChild){
+					Polygon.removeChild(Polygon.firstChild);
+				}
+			}
+			// console.log(processedDataWithoutNull);
+			polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
+		});
+	}
+
+</script>
+
+<script type="text/javascript">
+
+	function clear(){
+		var item=document.getElementById('resultDisplay');
+		while(item.firstChild){
+			item.removeChild(item.firstChild);
+		}
+	}
+
+  function tabOpenProCon(){
+		prepare();
+		searchQuery()
+		function prepare(){
+			clear();
+	    var ProVsCon=document.createElement("div");
+	    document.getElementById("resultDisplay").appendChild(ProVsCon);
+			ProVsCon.setAttribute("id","ProVsCon");
+
+			var Pro=document.createElement("div");
+			document.getElementById("ProVsCon").appendChild(Pro);
+			Pro.setAttribute("id","Pro");
+
+			var Con=document.createElement("div");
+			document.getElementById("ProVsCon").appendChild(Con);
+			Con.setAttribute("id","Con");
+		}
+	}
+
+  function tabOpenMds(){
+		prepare();
+		d3.text("topic_dist_per_doc.txt",function(data){
+			var argumentData=getArgumentData(data);
+
+			var topicsNum=getTopicsNum(argumentData);
+			var processedData=getProcessedData(argumentData,topicsNum);
+			//console.log(processedData);
+
+
+			function getArgumentData(data){
+				var argumentData=[];
+				var data=data.split(/[[\]]/);
+				for(var i=0;i<data.length;i++){
+					if(isNaN(data[i])){
+						data[i]=data[i].replace(/,/g,"");
+						data[i]=data[i].split(/[(\)]/).filter(clean);
+						argumentData.push(data[i]);
+					}
+				}
+				//console.log(argumentData);
+				for(var i=0;i<argumentData.length;i++){
+					for(var j=0;j<argumentData[i].length;j++){
+						var cell=argumentData[i][j].split(" ");
+						var topicID=cell[0];
+						var freq=cell[1];
+
+						var newCell = {};
+						newCell.topicID = topicID;
+						newCell.freq = freq;
+						argumentData[i][j]=newCell;
+					}
+				}
+				return argumentData;
+			}
+			function getTopicsNum(argumentData){
+				var arrayTopic=[]
+				for(var i=0;i<argumentData.length;i++){
+					for(var j=0;j<argumentData[i].length;j++){
+						arrayTopic.push(argumentData[i][j].topicID);
+					}
+				}
+				return Math.max.apply(null, arrayTopic);
+			}
+			function getProcessedData(argumentData,topicsNum){
+				var freqArray=[];
+				for(var i=0;i<argumentData.length;i++){
+					freqArray[i]=new Array(topicsNum);
+				}
+
+				for(var i=0;i<argumentData.length;i++){
+					for(var k=0;k<argumentData[i].length;k++){
+						for(var j=0;j<topicsNum;j++){
+							if(j==argumentData[i][k].topicID){
+								freqArray[i][j]=argumentData[i][k].freq;
+							}else if(freqArray[i][j]>0){
+								freqArray[i][j]=freqArray[i][j];
+							}else{
+								freqArray[i][j]=0;
+							}
+						}
+					}
+				}
+				//console.log(freqArray);
+				return freqArray;
+			}
+			function clean(value){
+				if(isNaN(value)){
+					return true;
+				}
+			}
+			euclidean(processedData);
+			KL(processedData);
+			Cosin(processedData);
+		});
+		function prepare(){
+			clear();
+			var mds=document.createElement("div");
+			document.getElementById("resultDisplay").appendChild(mds);
+			mds.setAttribute("id","mds");
+
+			var euclideanDistance=document.createElement("div");
+	    document.getElementById("mds").appendChild(euclideanDistance);
+			euclideanDistance.setAttribute("id","euclideanDistance");
+
+			var KLDistance=document.createElement("div");
+	    document.getElementById("mds").appendChild(KLDistance);
+			KLDistance.setAttribute("id","KLDistance");
+
+			var CosineSimilarity=document.createElement("div");
+	    document.getElementById("mds").appendChild(CosineSimilarity);
+			CosineSimilarity.setAttribute("id","CosineSimilarity");
+		}
+ 	}
+
+  function tabOpenBarycentric(){
+
+		prepare();
+		polygonCheck();
+		checkBox();
+
+		function checkBox(){
+			var listCheck=document.createElement("ul");
+			listCheck.id="listCheck";
+			document.getElementById("checkbox").appendChild(listCheck)
+			for(var i=0;i<labels.length;i++){
+				var item=document.createElement("li");
+				item.id="checkboxList"+i
+			 	var subCheckbox=document.createElement("input");
+				item.appendChild(subCheckbox);
+				subCheckbox.type="checkbox";
+				subCheckbox.class="checkbox"
+				subCheckbox.name="topic";
+				subCheckbox.value=labels[i];
+				subCheckbox.id="id"+i;
+				subCheckbox.class="box";
+				subCheckbox.checked="checked";
+				subCheckbox.onclick=polygonCheck;
+
+				listCheck.appendChild(item);
+				var label=document.createElement("label");
+				label.htmlFor=labels[i];
+		 	  label.appendChild(document.createTextNode(labels[i]));
+				document.getElementById("checkboxList"+i).appendChild(label);
+			 }
+		}
+
+		 // for(var i=0;i<labels.length;i++){
+ 		 // 	var labelCheckbox=document.createElement("label");
+			// labelCheckbox.className="checkboxContainer";
+			// labelCheckbox.htmlFor=labels[i];
+			// labelCheckbox.id="labelId"+i;
+			// labelCheckbox.appendChild(document.createTextNode(labels[i]));
+			// document.getElementById("checkbox").appendChild(labelCheckbox);
+		 //
+			// var subCheckbox=document.createElement("input");
+			// subCheckbox.type="checkbox";
+ 			// subCheckbox.name="topic";
+ 			// subCheckbox.value=labels[i];
+ 			// subCheckbox.id="id"+i;
+ 			// subCheckbox.checked="checked";
+ 			// subCheckbox.onclick=polygonCheck;
+ 	   // 	document.getElementById("labelId"+i).appendChild(subCheckbox);
+		 //
+			// var spanClass=document.createElement("span");
+			// spanClass.className="checkmark";
+			// document.getElementById("labelId"+i).appendChild(spanClass);
+ 		 // }
+
+
+		function prepare(){
+ 			clear();
+
+ 			var barycentric=document.createElement("div");
+ 			document.getElementById("resultDisplay").appendChild(barycentric);
+ 			barycentric.setAttribute("id","barycentric");
+
+ 			var polygon=document.createElement("div");
+ 			document.getElementById("barycentric").appendChild(polygon);
+ 			polygon.setAttribute("id","polygon");
+
+ 			var checkbox=document.createElement("div");
+ 			document.getElementById("barycentric").appendChild(checkbox);
+ 			checkbox.setAttribute("id","checkbox");
+
+			var overall=document.createElement("div");
+			document.getElementById("barycentric").appendChild(overall);
+			overall.setAttribute("id","overall")
+
+ 			}
+	}
+</script>
+
+</head>
+
+<body>
+	<div id="container">
+		<div id="header">
+			<h1>Args.me</h1>
+			<div class="SearchContainer">
+					<input id="searchText" type="text" class="searchTerm"/>
+					<button type="submit" class="searchButton" onclick="searchQuery()"/>Go!</button>
+			</div>
+		</div>
+		<div id="body">
+      <div id="tab">
+        <ul>
+          <li class="tablinks" onclick="tabOpenProCon()">Pro Vs. Con</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenMds()">MDS</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenBarycentric()">Barycentric </li>
+        </ul>
+      </div>
+			<div id="resultDisplay"></div>
+		</div>
+		<div id="footer">
+			<ul>
+        	<li class="float-left"><a href="">HELP</a></li>
+          <li class="float-left"><a href="">TERMS</a></li>
+          <li class="float-left"><a href="">PRIVACY</a></li>
+          <li class="float-left"><a href="">API</a></li>
+          <li class="float-right"><a href="">ABOUT</a></li>
+          <li class="float-right"><a href="">@2017WEBIS</a></li>
+        </ul>
+		</div>
+	</div>
+</body>
+</html>
