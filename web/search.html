@@ -209,6 +209,20 @@
 
     let processedLabels = selectedTopics();
     console.log(processedLabels);
+	function cleanSvg(){
+		var Polygon=document.getElementById('polygon');
+		while(Polygon.firstChild){
+			Polygon.removeChild(Polygon.firstChild);
+		}
+    let proConLists = document.querySelectorAll('.argumentText');
+    proConLists.forEach(function (list) {
+      while(list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      list.remove();
+    });
+    // console.log(proConLists);
+	}
 
     let clonedContent = _.clone(content, true);
     // all properties of the content but only with arguments that have topics
