@@ -228,6 +228,7 @@
   function polygonCheck(content, data){
     if(data === undefined) {
       data = globalData;
+      cleanSvg();
     }
 
     // check for checked topics return all topics if selection is empty
@@ -255,10 +256,7 @@
       });
 
     // remove all arguments containing removed topics
-
-
     console.log('after topic selection: ', processedData );
-
 
     function selectedTopics() {
       let nodeList = document.querySelectorAll('input[type="checkbox"]:checked');
