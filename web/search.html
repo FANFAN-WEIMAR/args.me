@@ -412,7 +412,7 @@
 
 		prepare();
 
-    // preprocessing data
+    // PREPROCESSING DATA
     // NOTE: remove with LDA modeling
     // all properties of the content but only with arguments that have topics
     let argumentData = data.filter(arg => arg.topics !== undefined);
@@ -426,8 +426,6 @@
     let topicsVectorExpand = argumentData
       .map(arg => arg.topics)
       .map(function (array, i) {
-      // let result = new Array;
-      // result = result.concat(array);
         topicArray.forEach(function (topic) {
           array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
         });
@@ -474,29 +472,12 @@
       }
     });
     globalData = processedData;
-    console.log('processedData: ', processedData);
+    // console.log('processedData: ', processedData);
 
     let labels = processedData[0].topics.map(topics => topics.topic);
     // console.log('labels: ', labels);
 
-		for(var i=0;i<labels.length;i++){
-		 	var subCheckbox=document.createElement("input");
-			subCheckbox.type="checkbox";
-			subCheckbox.class="checkbox"
-			subCheckbox.name="topic";
-			subCheckbox.value=labels[i];
-			subCheckbox.id="id"+i;
-			subCheckbox.class="box";
-			subCheckbox.checked="checked";
-			subCheckbox.onclick=polygonCheck;
-	   	document.getElementById("checkbox").appendChild(subCheckbox);
-
-			var label=document.createElement("label");
-			label.htmlFor=labels[i];
-	 	  label.appendChild(document.createTextNode(labels[i]));
-			document.getElementById("checkbox").appendChild(label);
-		 }
-
+		checkBox();
 		polygonCheck(content, processedData);
 
 		function prepare(){
@@ -519,6 +500,31 @@
 			overall.setAttribute("id","overall")
 
  			}
+
+		function checkBox(){
+			var listCheck=document.createElement("ul");
+			listCheck.id="listCheck";
+			document.getElementById("checkbox").appendChild(listCheck)
+			for(var i=0;i<labels.length;i++){
+				var item=document.createElement("li");
+				item.id="checkboxList"+i
+			 	var subCheckbox=document.createElement("input");
+				item.appendChild(subCheckbox);
+				subCheckbox.type="checkbox";
+				subCheckbox.class="checkbox"
+				subCheckbox.name="topic";
+				subCheckbox.value=labels[i];
+				subCheckbox.id="id"+i;
+				subCheckbox.class="box";
+				subCheckbox.checked="checked";
+				subCheckbox.onclick=polygonCheck;
+				listCheck.appendChild(item);
+				var label=document.createElement("label");
+				label.htmlFor=labels[i];
+		 	  label.appendChild(document.createTextNode(labels[i]));
+				document.getElementById("checkboxList"+i).appendChild(label);
+			 }
+		}
 	}
 </script>
 
