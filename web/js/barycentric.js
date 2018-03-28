@@ -21,13 +21,10 @@
       //console.log(data);
       var topicsLabel=wordCloud(215,labels);
       var rowData=mean(rowData);
-      var argument=processedArgument(rowData,data,score,stance);
+      var argument=processedArgument(rowData,data,score,stance,processedData);
       // console.log(argument);
 
       var topicsLabel=wordCloud(201,labels);
-
-      var argument=processedArgument(rowData,data,score,stance,processedData);
-
       var circles=data.concat(argument);
 
       document.getElementById('overall').appendChild(listArgument(argumentList,data,circles));
