@@ -1,16 +1,28 @@
 (function(barycentric) {
 
-    polygon = function(processedData,element,radius,verticesNumber,labels,score){
+    polygon = function(processedData,element,radius,labels){
+
+      let verticesNumber = labels.length;
       var rowData=getWeight(processedData);
       var rowData=mean(rowData);
       var score=getScore(processedData);
       var stance=getStance(processedData);
       var argumentList=getTitle(processedData);
 
+      rowData = processedData.map(function (arg) {
+        return arg.topics.map(o => o.weight);
+      });
+      // console.log(rowData);
+
       var col=rowData[0].length;
       var row=rowData.length;
 
       var data=polygonGraph(radius,verticesNumber);
+      //console.log(data);
+      var topicsLabel=wordCloud(215,labels);
+      var rowData=mean(rowData);
+      var argument=processedArgument(rowData,data,score,stance);
+      // console.log(argument);
 
       var topicsLabel=wordCloud(201,labels);
 
@@ -43,7 +55,7 @@
 
       function wordDisplay(width,height,x,y){
 
-        var fill = d3.scale.category20();
+        var fill = d3.scaleOrdinal(d3.schemeCategory20);
 
         var layout = d3.layout.cloud()
             .size([width, height])
@@ -442,6 +454,10 @@
 
       var g = svg.append('g')
           .attr('transform', "translate(" + radius*1.5 + " " + radius*1.5 + ")");
+
+
+      var circles=data.concat(argument);
+      // console.log(circles);
 
       var defs = g.append("defs");
 
