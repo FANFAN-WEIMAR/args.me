@@ -224,91 +224,13 @@
     // console.log(proConLists);
 	}
 
-    let clonedContent = _.clone(content, true);
-    // all properties of the content but only with arguments that have topics
-    let argumentData = clonedContent.filter(arg => arg.topics !== undefined);
 
-    // return array of topics sorted by descending occurence
-    function getTopicArray(array) {
-      let topicMap = d3.map();
-
-      // count occurence of topics
-      array.forEach(function (arg, i) {
-        for (topicTuple of arg.topics) {
-          if(topicMap.has(topicTuple.topic)) {
-            topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
-          }
-          else {
-            topicMap.set(topicTuple.topic, 1);
-          }
-        }
-      });
-
-      // sort topics descending
-      let topicArray = topicMap.entries().sort(function (a, b) {
-        if(a.value < b.value) {return 1;}
-        if(a.value > b.value) {return -1;}
-        return 0;
-      });
-      return topicArray;
     }
 
-    // sorted topicArray by occurence
-    let topicArray = getTopicArray(argumentData).map((a) => a.key);
-    // console.log('topicArray', topicArray);
 
-    // add all topics to args in argumentData
-    let topicsVectorExpand = argumentData
-      .map(arg => arg.topics)
-      .map(function (array, i) {
-      // let result = new Array;
-      // result = result.concat(array);
-        topicArray.forEach(function (topic) {
-          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
         });
-        return array;
+
       });
-
-      // sort according to order of topicsArray
-      topicsVectorExpand
-      .forEach((list) => {
-        list.sort(function (a, b) {
-          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
-        });
-      });
-    // console.log('topicsVectorExpand: ', topicsVectorExpand);
-
-    // cut argumentData to eight topics and other based on topic frequency
-    let occurenceTopicVec = topicsVectorExpand
-      .map(function (array) {
-        // compute weight of topic: other
-        let otherTopicsWeight = array
-          .slice(0, 8)
-          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
-        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
-
-        let arrayCut = array.slice(0, 8)
-          .concat([otherTopicsWeight]);
-
-        return arrayCut;
-      });
-    // console.log('occurenceTopicVec: ', occurenceTopicVec);
-
-    let processedData2 = argumentData.map((arg, i) => {
-      return {
-        argumentID: arg.argumentID,
-        conclusion: arg.conclusion,
-        discussionID: arg.discussionID,
-        id: arg.id,
-        premise: arg.premise,
-        score: arg.score,
-        stance: arg.stance,
-        title: arg.title,
-        topics: occurenceTopicVec[i],
-        url: arg.url
-      }
-    });
-    // console.log('processedData2: ', processedData2);
 
 
 
@@ -449,9 +371,102 @@
 		}
  	}
 
+  // return array of topics sorted by descending occurence
+  function getTopicArray(array) {
+    let topicMap = d3.map();
+
+    // count occurence of topics
+    array.forEach(function (arg, i) {
+      for (topicTuple of arg.topics) {
+        if(topicMap.has(topicTuple.topic)) {
+          topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
+        }
+        else {
+          topicMap.set(topicTuple.topic, 1);
+        }
+      }
+    });
+
+    // sort topics descending
+    let topicArray = topicMap.entries().sort(function (a, b) {
+      if(a.value < b.value) {return 1;}
+      if(a.value > b.value) {return -1;}
+      return 0;
+    });
+    return topicArray;
+  }
+
   function tabOpenBarycentric(data){
+
 		prepare();
 		polygonCheck(data);
+
+    // preprocessing data
+    // NOTE: remove with LDA modeling
+    // all properties of the content but only with arguments that have topics
+    let argumentData = data.filter(arg => arg.topics !== undefined);
+    // console.log('argumentData: ', argumentData);
+
+    // sorted topicArray by occurence
+    let topicArray = getTopicArray(argumentData).map((a) => a.key);
+    // console.log('topicArray', topicArray);
+
+    // add all topics to args in argumentData
+    let topicsVectorExpand = argumentData
+      .map(arg => arg.topics)
+      .map(function (array, i) {
+      // let result = new Array;
+      // result = result.concat(array);
+        topicArray.forEach(function (topic) {
+          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
+        });
+        return array;
+      });
+
+      // sort according to order of topicsArray
+      topicsVectorExpand
+      .forEach((list) => {
+        list.sort(function (a, b) {
+          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
+        });
+      });
+    // console.log('topicsVectorExpand: ', topicsVectorExpand);
+
+    // cut argumentData to eight topics and other based on topic frequency
+    let occurenceTopicVec = topicsVectorExpand
+      .map(function (array) {
+        // compute weight of topic: other
+        let otherTopicsWeight = array
+          .slice(0, 8)
+          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
+        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
+
+        let arrayCut = array.slice(0, 8)
+          .concat([otherTopicsWeight]);
+
+        return arrayCut;
+      });
+    // console.log('occurenceTopicVec: ', occurenceTopicVec);
+
+    let processedData = argumentData.map((arg, i) => {
+      return {
+        argumentID: arg.argumentID,
+        conclusion: arg.conclusion,
+        discussionID: arg.discussionID,
+        id: arg.id,
+        premise: arg.premise,
+        score: arg.score,
+        stance: arg.stance,
+        title: arg.title,
+        topics: occurenceTopicVec[i],
+        url: arg.url
+      }
+    });
+    globalData = processedData;
+    console.log('processedData: ', processedData);
+
+    let labels = processedData[0].topics.map(topics => topics.topic);
+    // console.log('labels: ', labels);
 
 		for(var i=0;i<labels.length;i++){
 		 	var subCheckbox=document.createElement("input");
