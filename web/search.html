@@ -5,9 +5,10 @@
 <link rel="stylesheet" type="text/css" href="css/search.css"/>
 <title>Results</title>
 
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
 <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/numericjs@1.2.6/numeric-1.2.6.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
 
 <script src="js/mds.js"></script>
@@ -15,6 +16,8 @@
 
 <script type="text/javascript">
 
+
+  var globalData;
   function startSearch() {
     if (searchText.value === "") {
       console.log('value not set ');
@@ -43,18 +46,6 @@
 		//tabOpenProCon();
     //polygonCheck();
 	}
-
-</script>
-
-<script type="text/javascript">
-
-	var labels = [
-			'Economy',
-			'Society',
-			'Education',
-			'Culture',
-			'Environment',
-			'Human Right'];
 
 </script>
 
@@ -205,246 +196,68 @@
       });
 	}
 
-  function polygonCheck(content){
-    /* NOTE: things to calculate for polygon()
-        - topicsNum:      number of uniq topics
-        - processedLabel: label names for topics
-        - verticesNumber: currently active topics
 
-        - function to filter data by six highest topics
-        - argumentData returns condensed version of filtered dataset
-        - write processedData(createMatrix) to get matrix of arg -> topics mapping
-    */
+	function cleanSvg(){
+		var Polygon=document.getElementById('polygon');
+		while(Polygon.firstChild){
+			Polygon.removeChild(Polygon.firstChild);
+		}
+    let proConLists = document.querySelectorAll('.argumentText');
+    proConLists.forEach(function (list) {
+      while(list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      list.remove();
+    });
+    // console.log(proConLists);
+	}
 
-    let clonedContent = _.clone(content, true);
-    // all properties of the content but only with arguments that have topics
-    let argumentData = clonedContent.filter(arg => arg.topics !== undefined);
 
-    // return array of topics sorted by descending occurence
-    function getTopicArray(array) {
-      let topicMap = d3.map();
+  function polygonCheck(content, data){
+    if(data === undefined) {
+      data = globalData;
+      cleanSvg();
+    }
 
-      // count occurence of topics
-      array.forEach(function (arg, i) {
-        for (topicTuple of arg.topics) {
-          if(topicMap.has(topicTuple.topic)) {
-            topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
-          }
-          else {
-            topicMap.set(topicTuple.topic, 1);
-          }
+    // check for checked topics return all topics if selection is empty
+    let processedLabels = selectedTopics();
+    // console.log('processedLabels: ',processedLabels);
+
+    //change topics in data based on processedLabels
+    let processedData = data.map(function (arg) {
+        let topicArray = arg.topics.filter((tuple) => {
+          return processedLabels.find(item => tuple.topic === item)
+        });
+
+        return {
+          argumentID: arg.argumentID,
+          conclusion: arg.conclusion,
+          discussionID: arg.discussionID,
+          id: arg.id,
+          premise: arg.premise,
+          score: arg.score,
+          stance: arg.stance,
+          title: arg.title,
+          topics: topicArray,
+          url: arg.url
         }
       });
 
-      // sort topics descending
-      let topicArray = topicMap.entries().sort(function (a, b) {
-        if(a.value < b.value) {return 1;}
-        if(a.value > b.value) {return -1;}
-        return 0;
-      });
-      return topicArray;
+    // remove all arguments containing removed topics
+    console.log('after topic selection: ', processedData );
+
+    function selectedTopics() {
+      let nodeList = document.querySelectorAll('input[type="checkbox"]:checked');
+      let result = [];
+      nodeList.forEach(function (item) {
+        result.push(item.attributes.value.nodeValue);
+      })
+      return result;
     }
 
-    // sorted topicArray by occurence
-    let topicArray = getTopicArray(argumentData).map((a) => a.key);
-    console.log('topicArray', topicArray);
-
-    // add all topics to args in argumentData
-    let topicsVectorExpand = argumentData
-      .map(arg => arg.topics)
-      .map(function (array, i) {
-      // let result = new Array;
-      // result = result.concat(array);
-        topicArray.forEach(function (topic) {
-          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
-        });
-        return array;
-      });
-
-      // sort according to order of topicsArray
-      topicsVectorExpand
-      .forEach((list) => {
-        list.sort(function (a, b) {
-          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
-        });
-      });
-    // console.log('topicsVectorExpand: ', topicsVectorExpand);
-
-    // cut argumentData to eight topics and other based on topic frequency
-    let occurenceTopicVec = topicsVectorExpand
-      .map(function (array) {
-        // compute weight of topic: other
-        let otherTopicsWeight = array
-          .slice(0, 8)
-          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
-        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
-
-        let arrayCut = array.slice(0, 8)
-          .concat([otherTopicsWeight]);
-
-        return arrayCut;
-      });
-    console.log('occurenceTopicVec: ', occurenceTopicVec);
-
-    let processedData2 = argumentData.map((arg, i) => {
-      return {
-        argumentID: arg.argumentID,
-        conclusion: arg.conclusion,
-        discussionID: arg.discussionID,
-        id: arg.id,
-        premise: arg.premise,
-        score: arg.score,
-        stance: arg.stance,
-        title: arg.title,
-        topics: occurenceTopicVec[i],
-        url: arg.url
-      }
-    });
-    console.log('processedData2: ', processedData2);
-
-
-		var stance=[];
-		var score=[];
-		var topicsVector=[];
-		var title=[];
-		var url=[];
-
-		for(var i=0;i<content.length;i++){
-			stance[i]=content[i].stance;
-			score[i]=content[i].score;
-			topicsVector[i]=content[i].topics;
-			title[i]=content[i].title;
-			url[i]=content[i].url;
-		}
-
-		// var topicsNum=getTopicsNum(topicsVector);
-		var topicsNum=6;
-		//console.log(topicsNum);
-		var preparedLabels=setLabel(topicsNum);
-		//console.log(preparedLabels);
-		var checkedTopics=topicsSelection();
-		//console.log(checkedTopics);
-		var verticesNumber=checkedTopics.length;
-		//console.log(verticesNumber);
-
-		var processedLabel=topicsAfterTopicSelection(checkedTopics,preparedLabels);
-		// console.log(processedLabel);
-		var processedWeight=weightAfterTopicSelection(checkedTopics,topicsVectorExpand,topicsNum);
-		// console.log('processedWeight: ', processedWeight);
-		var processedData=argumentAfterTopicSelection(processedWeight);
-		// console.log('processedData: ', processedData);
-
-		function getTopicsNum(argumentData){
-			var arrayTopic=[]
-			for(var i=0;i<argumentData.length;i++){
-				for(var j=0;j<argumentData[i].length;j++){
-					arrayTopic.push(argumentData[i][j].topicID);
-				}
-			}
-			return Math.max.apply(null, arrayTopic);
-		}
-		function setLabel(num){
-			var labelsA=[];
-			for(i=0;i<=num;i++){
-				//labelsA[i]="topic"+(i);
-				labelsA[i]=labels[i];
-			}
-			return labelsA;
-		}
-		function topicsSelection(){
-			var checkedTopics=[];
-			var topics=document.getElementsByName('topic');
-			for(var i=0;i<topics.length;i++){
-				if(topics[i].checked){
-					checkedTopics.push(i);
-				}
-			}
-			return checkedTopics;
-		}
-		function topicsAfterTopicSelection(checkedTopics, labels){
-			var processedLabel=[];
-			for(var a=0;a<checkedTopics.length;a++){
-				processedLabel[a]=labels[checkedTopics[a]]
-			}
-			return processedLabel;
-		}
-		function weightAfterTopicSelection(checkedTopics,argumentData,topicsNum){
-			var freqArray=[];
-			for(var i=0;i<argumentData.length;i++){
-				freqArray[i]=new Array(topicsNum+1);
-			}
-
-			for(var i=0;i<argumentData.length;i++){
-				for(var k=0;k<argumentData[i].length;k++){
-					for(var j=0;j<=topicsNum;j++){
-						if(j==argumentData[i][k].topic){
-							freqArray[i][j]=argumentData[i][k].weight;
-						}else if(freqArray[i][j]>0){
-							freqArray[i][j]=freqArray[i][j];
-						}else{
-							freqArray[i][j]=0;
-						}
-					}
-				}
-			}
-			//console.log(freqArray);
-
-			var col=freqArray[0].length;
-			var row=freqArray.length;
-
-			var processedWeight=[];
-			for(var i=0;i<row;i++){
-				processedWeight[i]=new Array(checkedTopics.length);
-			}
-
-			for (var a=0;a<row;a++){
-				for (var b=0;b<checkedTopics.length;b++){
-					var n=checkedTopics[b];
-					var m=parseFloat(freqArray[a][n])
-					processedWeight[a][b]=m;
-				}
-			}
-			//processedData=processedData.filter(remove)
-			//console.log(processedData);
-			return processedWeight;
-		}
-		function argumentAfterTopicSelection(processedWeight){
-			var processedData=[];
-			for(var i=0;i<processedWeight.length;i++){
-				processedData.push({
-					weight:processedWeight[i],
-					score:score[i],
-					stance:stance[i],
-					title:title[i],
-					url:url[i]
-				})
-			}
-			processedData=processedData.filter(remove)
-			return processedData;
-		}
-		function remove(value){
-			var zeroVector=[];
-			for(var i=0;i<value.weight.length;i++){
-				zeroVector[i]=0;
-			}
-			var equalCheck=_.isEqual(value.weight,zeroVector);
-			if(!equalCheck){
-				return true;
-			}
-		}
-		function clean(value){
-			if(isNaN(value)){
-				return true;
-			}
-		}
-		function cleanSvg(){
-			var Polygon=document.getElementById('polygon');
-			while(Polygon.firstChild){
-				Polygon.removeChild(Polygon.firstChild);
-			}
-		}
-		// console.log(processedDataWithoutNull);
-		polygon(processedData,d3.select('#polygon'),200,verticesNumber,processedLabel);
+    // try with API data
+    let radius = 200;
+		polygon(processedData, d3.select('#polygon'), radius, processedLabels);
 	}
 </script>
 
@@ -570,28 +383,102 @@
 		}
  	}
 
+  // return array of topics sorted by descending occurence
+  function getTopicArray(array) {
+    let topicMap = d3.map();
+
+    // count occurence of topics
+    array.forEach(function (arg, i) {
+      for (topicTuple of arg.topics) {
+        if(topicMap.has(topicTuple.topic)) {
+          topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
+        }
+        else {
+          topicMap.set(topicTuple.topic, 1);
+        }
+      }
+    });
+
+    // sort topics descending
+    let topicArray = topicMap.entries().sort(function (a, b) {
+      if(a.value < b.value) {return 1;}
+      if(a.value > b.value) {return -1;}
+      return 0;
+    });
+    return topicArray;
+  }
+
   function tabOpenBarycentric(data){
+
 		prepare();
-		polygonCheck(data);
 
-		for(var i=0;i<labels.length;i++){
-		 	var subCheckbox=document.createElement("input");
-			subCheckbox.type="checkbox";
-			subCheckbox.class="checkbox"
-			subCheckbox.name="topic";
-			subCheckbox.value=labels[i];
-			subCheckbox.id="id"+i;
-			subCheckbox.class="box";
-			subCheckbox.checked="checked";
-			subCheckbox.onclick=polygonCheck;
-	   	document.getElementById("checkbox").appendChild(subCheckbox);
+    // PREPROCESSING DATA
+    // NOTE: remove with LDA modeling
+    // all properties of the content but only with arguments that have topics
+    let argumentData = data.filter(arg => arg.topics !== undefined);
+    // console.log('argumentData: ', argumentData);
 
-			var label=document.createElement("label");
-			label.htmlFor=labels[i];
-	 	  label.appendChild(document.createTextNode(labels[i]));
-			document.getElementById("checkbox").appendChild(label);
-		 }
+    // sorted topicArray by occurence
+    let topicArray = getTopicArray(argumentData).map((a) => a.key);
+    // console.log('topicArray', topicArray);
 
+    // add all topics to args in argumentData
+    let topicsVectorExpand = argumentData
+      .map(arg => arg.topics)
+      .map(function (array, i) {
+        topicArray.forEach(function (topic) {
+          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
+        });
+        return array;
+      });
+
+      // sort according to order of topicsArray
+      topicsVectorExpand
+      .forEach((list) => {
+        list.sort(function (a, b) {
+          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
+        });
+      });
+    // console.log('topicsVectorExpand: ', topicsVectorExpand);
+
+    // cut argumentData to eight topics and other based on topic frequency
+    let occurenceTopicVec = topicsVectorExpand
+      .map(function (array) {
+        // compute weight of topic: other
+        let otherTopicsWeight = array
+          .slice(0, 8)
+          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
+        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
+
+        let arrayCut = array.slice(0, 8)
+          .concat([otherTopicsWeight]);
+
+        return arrayCut;
+      });
+    // console.log('occurenceTopicVec: ', occurenceTopicVec);
+
+    let processedData = argumentData.map((arg, i) => {
+      return {
+        argumentID: arg.argumentID,
+        conclusion: arg.conclusion,
+        discussionID: arg.discussionID,
+        id: arg.id,
+        premise: arg.premise,
+        score: arg.score,
+        stance: arg.stance,
+        title: arg.title,
+        topics: occurenceTopicVec[i],
+        url: arg.url
+      }
+    });
+    globalData = processedData;
+    // console.log('processedData: ', processedData);
+
+    let labels = processedData[0].topics.map(topics => topics.topic);
+    // console.log('labels: ', labels);
+
+		checkBox();
+		polygonCheck(content, processedData);
 
 		function prepare(){
  			clear();
@@ -608,22 +495,36 @@
  			document.getElementById("barycentric").appendChild(checkbox);
  			checkbox.setAttribute("id","checkbox");
 
-			var proBox=document.createElement("div");
-			document.getElementById("barycentric").appendChild(proBox);
-			proBox.setAttribute("id","proBox");
+			var overall=document.createElement("div");
+			document.getElementById("barycentric").appendChild(overall);
+			overall.setAttribute("id","overall")
 
-			var proTitle=document.createElement("div");
-			document.getElementById("barycentric").appendChild(proTitle);
-			proTitle.setAttribute("id","proTitle");
-
-			var conBox=document.createElement("div");
-			document.getElementById("barycentric").appendChild(conBox);
-			conBox.setAttribute("id","conBox");
-
-			var conTitle=document.createElement("div");
-			document.getElementById("barycentric").appendChild(conTitle);
-			conTitle.setAttribute("id","conTitle");
  			}
+
+		function checkBox(){
+			var listCheck=document.createElement("ul");
+			listCheck.id="listCheck";
+			document.getElementById("checkbox").appendChild(listCheck)
+			for(var i=0;i<labels.length;i++){
+				var item=document.createElement("li");
+				item.id="checkboxList"+i
+			 	var subCheckbox=document.createElement("input");
+				item.appendChild(subCheckbox);
+				subCheckbox.type="checkbox";
+				subCheckbox.class="checkbox"
+				subCheckbox.name="topic";
+				subCheckbox.value=labels[i];
+				subCheckbox.id="id"+i;
+				subCheckbox.class="box";
+				subCheckbox.checked="checked";
+				subCheckbox.onclick=polygonCheck;
+				listCheck.appendChild(item);
+				var label=document.createElement("label");
+				label.htmlFor=labels[i];
+		 	  label.appendChild(document.createTextNode(labels[i]));
+				document.getElementById("checkboxList"+i).appendChild(label);
+			 }
+		}
 	}
 </script>
 
