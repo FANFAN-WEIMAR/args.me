@@ -207,8 +207,6 @@
 	}
 
 
-    let processedLabels = selectedTopics();
-    console.log(processedLabels);
 	function cleanSvg(){
 		var Polygon=document.getElementById('polygon');
 		while(Polygon.firstChild){
@@ -225,6 +223,7 @@
 	}
 
 
+  function polygonCheck(content, data){
     }
 
 
@@ -399,7 +398,6 @@
   function tabOpenBarycentric(data){
 
 		prepare();
-		polygonCheck(data);
 
     // preprocessing data
     // NOTE: remove with LDA modeling
@@ -486,6 +484,7 @@
 			document.getElementById("checkbox").appendChild(label);
 		 }
 
+		polygonCheck(content, processedData);
 
 		function prepare(){
  			clear();
