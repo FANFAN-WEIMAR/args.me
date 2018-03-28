@@ -230,13 +230,34 @@
       data = globalData;
     }
 
+    // check for checked topics return all topics if selection is empty
+    let processedLabels = selectedTopics();
+    // console.log('processedLabels: ',processedLabels);
 
+    //change topics in data based on processedLabels
+    let processedData = data.map(function (arg) {
+        let topicArray = arg.topics.filter((tuple) => {
+          return processedLabels.find(item => tuple.topic === item)
         });
 
+        return {
+          argumentID: arg.argumentID,
+          conclusion: arg.conclusion,
+          discussionID: arg.discussionID,
+          id: arg.id,
+          premise: arg.premise,
+          score: arg.score,
+          stance: arg.stance,
+          title: arg.title,
+          topics: topicArray,
+          url: arg.url
+        }
       });
 
+    // remove all arguments containing removed topics
 
 
+    console.log('after topic selection: ', processedData );
 
 
     function selectedTopics() {
@@ -249,6 +270,8 @@
     }
 
     // try with API data
+    let radius = 200;
+		polygon(processedData, d3.select('#polygon'), radius, processedLabels);
 	}
 </script>
 
