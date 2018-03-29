@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="css/search.css"/>
+<title>Results</title>
+
+<script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/numericjs@1.2.6/numeric-1.2.6.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-cloud@1.2.5/build/d3.layout.cloud.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/mathjs/3.18.1/math.min.js"></script>
+
+<script src="js/mds.js"></script>
+<script src="js/barycentric.js"></script>
+
+<script type="text/javascript">
+
+
+  var globalData;
+  function startSearch() {
+    if (searchText.value === "") {
+      console.log('value not set ');
+      search(searchText.placeholder)
+      .then(sendJSON)
+      .then(tabOpenBarycentric);
+    }
+    else {
+      // console.log('value set ', searchText.value);
+      // searchText.placeholder = searchText.value;
+      // window.location.search.replace(/^\?q=/, searchText.value);
+      search(searchText.value)
+      .then(sendJSON)
+      .then(tabOpenBarycentric);
+    }
+  }
+
+  window.onload=function(){
+		let queryString = window.location.search.replace(/^\?q=/,'');
+    queryString = queryString.split("&",1);
+    searchText.value = queryString;
+		searchText.placeholder = 'Search...';
+    // TODO: write working functoin for onclick event!!!
+    var searchButton = document.querySelector('.searchButton');
+    searchButton.addEventListener('onclick', startSearch());
+		//tabOpenProCon();
+    //polygonCheck();
+	}
+
+</script>
+
+<script type="text/javascript">
+
+	function euclidean(cityData){
+
+		var cityPositions = numeric.transpose(mds.classic(cityData));
+		// console.log(mds.classic(cityData));
+		// console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#euclideanDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth - 20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+	function KL(cityData){
+		var cityPositions = numeric.transpose(mds.KL(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#KLDistance"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+	function Cosin(cityData){
+		var cityPositions = numeric.transpose(mds.Cosin(cityData));
+		//console.log(cityPositions);
+		var w = Math.min(600, document.documentElement.clientWidth - 20),
+				h = w /2;
+		mds.drawD3ScatterPlot(d3.select("#CosineSimilarity"),
+				cityPositions[0],
+				cityPositions[1],
+				labels,
+				{
+						w :  Math.min(600, document.documentElement.clientWidth -20),
+						h : w /2,
+						padding : 37,
+						reverseX : true,
+						reverseY : true,
+				});
+	}
+
+
+</script>
+
+<script type="text/javascript">
+
+	function searchQuery(){
+		var searchValue=document.getElementById('searchText').value;
+		if(searchValue==""){
+			var searchValue=window.location.search.replace(/^\?q=/,'');
+			var searchValue=searchValue.split("&",1);
+		}
+		search(searchValue);
+	}
+
+  function sendJSON(data) {
+    // console.log('number of argument send: ',  data);
+    let url = 'http://localhost:3000/';
+    return fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(data[0]),
+        headers: new Headers({
+          'Content-Type': 'application/json'
+        })
+      })
+      .then(res => res.json())
+      .catch(error => console.error('Error: ', error))
+      .then((res) => {
+        data[1].forEach(function (argument) {
+          let argumentMatch = res.filter(function (arg) {
+            return arg.id === argument.id
+          });
+          argument.topics = (argumentMatch[0] !== undefined ? argumentMatch[0].topics : null);
+        })
+        // console.log('recieved from server: ', data[1]);
+        return data[1];
+      });
+  };
+
+	function search(query){
+		let apiURL="http://www.args.me/api/v1/_search?query=" + query;
+    return fetch(apiURL)
+      .then(res => res.json())
+      .then(function (data) {
+        let argumentList = [];
+        // console.log(data);
+        let args = data.results;
+        let regex =  /(debatepedia|debatewise|forandagainst|idebate|debate)\./g;
+        for(let arg in args) {
+          let portal = args[arg].url.match(regex)[0];
+          portal = portal.slice(0, -1);
+
+          let argID = portal
+                      + '-' + args[arg].discussionID
+                      + '-' + args[arg].argumentID;
+          argumentList.push(argID);
+          args[arg].id = argID;
+        }
+        // console.log('ArgumentList: ', argumentList, args);
+        return [argumentList, args];
+
+        //FANFAN
+        // var length = data.results.length;
+        // var conclusion, stance;
+  			// var div=document.getElementById('ProVsCon');
+  			// var divPro=document.getElementById('Pro');
+  			// var divCon=document.getElementById('Con');
+        // while(divPro.firstChild){
+  			// 	divPro.removeChild(divPro.firstChild);
+  			// }
+  			// while(divCon.firstChild){
+  			// 	divCon.removeChild(divCon.firstChild);
+  			// }
+        //
+  			// for(var i=0;i<length;i++){
+  			// 	conclusion=data.results[i].conclusion;
+  			// 	stance=data.results[i].stance;
+  			// 	if(stance==true){
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Pro').appendChild(iDiv);
+  			// 	}else{
+  			// 		var iDiv = document.createElement('div');
+  			// 		iDiv.innerHTML=conclusion;
+  			// 		div.appendChild(iDiv);
+  			// 		document.getElementById('Con').appendChild(iDiv);
+  			// 	}
+  			// }
+      });
+	}
+
+
+	function cleanSvg(){
+		var Polygon=document.getElementById('polygon');
+		while(Polygon.firstChild){
+			Polygon.removeChild(Polygon.firstChild);
+		}
+    let proConLists = document.querySelectorAll('.argumentText');
+    proConLists.forEach(function (list) {
+      while(list.firstChild) {
+        list.removeChild(list.firstChild);
+      }
+      list.remove();
+    });
+    // console.log(proConLists);
+	}
+
+
+  function polygonCheck(content, data){
+    if(data === undefined) {
+      data = globalData;
+      cleanSvg();
+    }
+
+    // check for checked topics return all topics if selection is empty
+    let processedLabels = selectedTopics();
+    // console.log('processedLabels: ',processedLabels);
+
+    //change topics in data based on processedLabels
+    let processedData = data.map(function (arg) {
+        let topicArray = arg.topics.filter((tuple) => {
+          return processedLabels.find(item => tuple.topic === item)
+        });
+
+        return {
+          argumentID: arg.argumentID,
+          conclusion: arg.conclusion,
+          discussionID: arg.discussionID,
+          id: arg.id,
+          premise: arg.premise,
+          score: arg.score,
+          stance: arg.stance,
+          title: arg.title,
+          topics: topicArray,
+          url: arg.url
+        }
+      });
+
+    // remove all arguments containing removed topics
+    console.log('after topic selection: ', processedData );
+
+    function selectedTopics() {
+      let nodeList = document.querySelectorAll('input[type="checkbox"]:checked');
+      let result = [];
+      nodeList.forEach(function (item) {
+        result.push(item.attributes.value.nodeValue);
+      })
+      return result;
+    }
+
+    // try with API data
+    let radius = 200;
+		polygon(processedData, d3.select('#polygon'), radius, processedLabels);
+	}
+</script>
+
+<script type="text/javascript">
+
+	function clear(){
+		var item=document.getElementById('resultDisplay');
+		while(item.firstChild){
+			item.removeChild(item.firstChild);
+		}
+	}
+
+  function tabOpenProCon(){
+		prepare();
+		searchQuery()
+		function prepare(){
+			clear();
+	    var ProVsCon=document.createElement("div");
+	    document.getElementById("resultDisplay").appendChild(ProVsCon);
+			ProVsCon.setAttribute("id","ProVsCon");
+
+			var Pro=document.createElement("div");
+			document.getElementById("ProVsCon").appendChild(Pro);
+			Pro.setAttribute("id","Pro");
+
+			var Con=document.createElement("div");
+			document.getElementById("ProVsCon").appendChild(Con);
+			Con.setAttribute("id","Con");
+		}
+	}
+
+  function tabOpenMds(){
+		prepare();
+		d3.text("topic_dist_per_doc.txt",function(data){
+			var argumentData=getArgumentData(data);
+			var topicsNum=getTopicsNum(argumentData);
+			var processedData=getProcessedData(argumentData,topicsNum);
+			//console.log(processedData);
+
+
+			function getArgumentData(data){
+				var argumentData=[];
+				var data=data.split(/[[\]]/);
+				for(var i=0;i<data.length;i++){
+					if(isNaN(data[i])){
+						data[i]=data[i].replace(/,/g,"");
+						data[i]=data[i].split(/[(\)]/).filter(clean);
+						argumentData.push(data[i]);
+					}
+				}
+				//console.log(argumentData);
+				for(var i=0;i<argumentData.length;i++){
+					for(var j=0;j<argumentData[i].length;j++){
+						var cell=argumentData[i][j].split(" ");
+						var topicID=cell[0];
+						var freq=cell[1];
+
+						var newCell = {};
+						newCell.topicID = topicID;
+						newCell.freq = freq;
+						argumentData[i][j]=newCell;
+					}
+				}
+				return argumentData;
+			}
+			function getTopicsNum(argumentData){
+				var arrayTopic=[]
+				for(var i=0;i<argumentData.length;i++){
+					for(var j=0;j<argumentData[i].length;j++){
+						arrayTopic.push(argumentData[i][j].topicID);
+					}
+				}
+				return Math.max.apply(null, arrayTopic);
+			}
+			function getProcessedData(argumentData,topicsNum){
+				var freqArray=[];
+				for(var i=0;i<argumentData.length;i++){
+					freqArray[i]=new Array(topicsNum);
+				}
+
+				for(var i=0;i<argumentData.length;i++){
+					for(var k=0;k<argumentData[i].length;k++){
+						for(var j=0;j<topicsNum;j++){
+							if(j==argumentData[i][k].topicID){
+								freqArray[i][j]=argumentData[i][k].freq;
+							}else if(freqArray[i][j]>0){
+								freqArray[i][j]=freqArray[i][j];
+							}else{
+								freqArray[i][j]=0;
+							}
+						}
+					}
+				}
+				//console.log(freqArray);
+				return freqArray;
+			}
+			function clean(value){
+				if(isNaN(value)){
+					return true;
+				}
+			}
+			euclidean(processedData);
+			KL(processedData);
+			Cosin(processedData);
+		});
+		function prepare(){
+			clear();
+			var mds=document.createElement("div");
+			document.getElementById("resultDisplay").appendChild(mds);
+			mds.setAttribute("id","mds");
+
+			var euclideanDistance=document.createElement("div");
+	    document.getElementById("mds").appendChild(euclideanDistance);
+			euclideanDistance.setAttribute("id","euclideanDistance");
+
+			var KLDistance=document.createElement("div");
+	    document.getElementById("mds").appendChild(KLDistance);
+			KLDistance.setAttribute("id","KLDistance");
+
+			var CosineSimilarity=document.createElement("div");
+	    document.getElementById("mds").appendChild(CosineSimilarity);
+			CosineSimilarity.setAttribute("id","CosineSimilarity");
+		}
+ 	}
+
+  // return array of topics sorted by descending occurence
+  function getTopicArray(array) {
+    let topicMap = d3.map();
+
+    // count occurence of topics
+    array.forEach(function (arg, i) {
+      for (topicTuple of arg.topics) {
+        if(topicMap.has(topicTuple.topic)) {
+          topicMap.set(String(topicTuple.topic), topicMap.get(topicTuple.topic) + 1);
+        }
+        else {
+          topicMap.set(topicTuple.topic, 1);
+        }
+      }
+    });
+
+    // sort topics descending
+    let topicArray = topicMap.entries().sort(function (a, b) {
+      if(a.value < b.value) {return 1;}
+      if(a.value > b.value) {return -1;}
+      return 0;
+    });
+    return topicArray;
+  }
+
+  function tabOpenBarycentric(data){
+
+		prepare();
+
+    // PREPROCESSING DATA
+    // NOTE: remove with LDA modeling
+    // all properties of the content but only with arguments that have topics
+    let argumentData = data.filter(arg => arg.topics !== undefined);
+    // console.log('argumentData: ', argumentData);
+
+    // sorted topicArray by occurence
+    let topicArray = getTopicArray(argumentData).map((a) => a.key);
+    // console.log('topicArray', topicArray);
+
+    // add all topics to args in argumentData
+    let topicsVectorExpand = argumentData
+      .map(arg => arg.topics)
+      .map(function (array, i) {
+        topicArray.forEach(function (topic) {
+          array.find(o => o.topic === topic) !== undefined ? array.push() : array.push({topic: topic, weight: 0});
+        });
+        return array;
+      });
+
+      // sort according to order of topicsArray
+      topicsVectorExpand
+      .forEach((list) => {
+        list.sort(function (a, b) {
+          return topicArray.indexOf(a.topic) - topicArray.indexOf(b.topic);
+        });
+      });
+    // console.log('topicsVectorExpand: ', topicsVectorExpand);
+
+    // cut argumentData to eight topics and other based on topic frequency
+    let occurenceTopicVec = topicsVectorExpand
+      .map(function (array) {
+        // compute weight of topic: other
+        let otherTopicsWeight = array
+          .slice(0, 8)
+          .reduce((a, b) => {return {topic: 'other', weight: a.weight + b.weight}});
+        otherTopicsWeight.weight = 1 - otherTopicsWeight.weight;
+
+        let arrayCut = array.slice(0, 8)
+          .concat([otherTopicsWeight]);
+
+        return arrayCut;
+      });
+    // console.log('occurenceTopicVec: ', occurenceTopicVec);
+
+    let processedData = argumentData.map((arg, i) => {
+      return {
+        argumentID: arg.argumentID,
+        conclusion: arg.conclusion,
+        discussionID: arg.discussionID,
+        id: arg.id,
+        premise: arg.premise,
+        score: arg.score,
+        stance: arg.stance,
+        title: arg.title,
+        topics: occurenceTopicVec[i],
+        url: arg.url
+      }
+    });
+    globalData = processedData;
+    // console.log('processedData: ', processedData);
+
+    let labels = processedData[0].topics.map(topics => topics.topic);
+    // console.log('labels: ', labels);
+
+		checkBox();
+		polygonCheck(content, processedData);
+
+		function prepare(){
+ 			clear();
+
+ 			var barycentric=document.createElement("div");
+ 			document.getElementById("resultDisplay").appendChild(barycentric);
+ 			barycentric.setAttribute("id","barycentric");
+
+ 			var polygon=document.createElement("div");
+ 			document.getElementById("barycentric").appendChild(polygon);
+ 			polygon.setAttribute("id","polygon");
+
+ 			var checkbox=document.createElement("div");
+ 			document.getElementById("barycentric").appendChild(checkbox);
+ 			checkbox.setAttribute("id","checkbox");
+
+			var overall=document.createElement("div");
+			document.getElementById("barycentric").appendChild(overall);
+			overall.setAttribute("id","overall")
+
+ 			}
+
+		function checkBox(){
+			var listCheck=document.createElement("ul");
+			listCheck.id="listCheck";
+			document.getElementById("checkbox").appendChild(listCheck)
+			for(var i=0;i<labels.length;i++){
+				var item=document.createElement("li");
+				item.id="checkboxList"+i
+			 	var subCheckbox=document.createElement("input");
+				item.appendChild(subCheckbox);
+				subCheckbox.type="checkbox";
+				subCheckbox.class="checkbox"
+				subCheckbox.name="topic";
+				subCheckbox.value=labels[i];
+				subCheckbox.id="id"+i;
+				subCheckbox.class="box";
+				subCheckbox.checked="checked";
+				subCheckbox.onclick=polygonCheck;
+				listCheck.appendChild(item);
+				var label=document.createElement("label");
+				label.htmlFor=labels[i];
+		 	  label.appendChild(document.createTextNode(labels[i]));
+				document.getElementById("checkboxList"+i).appendChild(label);
+			 }
+		}
+	}
+</script>
+
+</head>
+
+<body>
+	<div id="container">
+		<div id="header">
+			<h1>Args.me</h1>
+			<div class="SearchContainer">
+					<input id="searchText" type="text" class="searchTerm"/>
+					<button type="submit" class="searchButton" onclick="searchQuery()">Go!</button>
+			</div>
+		</div>
+		<div id="body">
+      <div id="tab">
+        <ul>
+          <li class="tablinks" onclick="tabOpenProCon()">Pro Vs. Con</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenMds()">MDS</li>
+          <li class="tablinks" > | </li>
+          <li class="tablinks" onclick="tabOpenBarycentric()">Barycentric </li>
+        </ul>
+      </div>
+			<div id="resultDisplay"></div>
+		</div>
+		<div id="footer">
+			<ul>
+        	<li class="float-left"><a href="">HELP</a></li>
+          <li class="float-left"><a href="">TERMS</a></li>
+          <li class="float-left"><a href="">PRIVACY</a></li>
+          <li class="float-left"><a href="">API</a></li>
+          <li class="float-right"><a href="">ABOUT</a></li>
+          <li class="float-right"><a href="">@2017WEBIS</a></li>
+        </ul>
+		</div>
+	</div>
+</body>
+</html>
