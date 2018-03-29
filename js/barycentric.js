@@ -12,7 +12,9 @@
 
       var data=polygonGraph(radius,verticesNumber);
 
-      var topicsLabel=wordCloud(201,labels);
+      var topicsLabel=wordCloud(215,labels);
+
+      var arrowDir=wordCloud(201,labels);
 
       var argument=processedArgument(rowData,data,score,stance,processedData);
 
@@ -131,8 +133,8 @@
           argumentWeight.push({
             x:xValue,
             y:yValue,
-            px:topicsLabel[maxIndex].x,
-            py:topicsLabel[maxIndex].y,
+            px:arrowDir[maxIndex].x,
+            py:arrowDir[maxIndex].y,
             //px:data[maxIndex].x,
             //py:data[maxIndex].y,
             overlap:overlap,
@@ -245,6 +247,7 @@
           snippet.innerHTML=arr[i].premise;
           snippet.setAttribute('class','snippet');
 
+
           a.addEventListener("mouseover",function(event){
             event.target.focus();
             var id=parseInt(event.target.id.replace(/\D/g,''));
@@ -283,9 +286,9 @@
                 .attr("class","highlight")
                 .attr("fill",function(d){
                   if(stance==true){
-                    return  "#0c9";
+                    return  "hsl(112, 37%, 58%)";
                   }else if(stance==false){
-                    return  '#c90';
+                    return  'hsl(0, 70%, 52%)';
                   }
                 })
                 .attr("opacity",1)
@@ -299,32 +302,17 @@
                 .attr('y1',function(d){return y;})
                 .attr("class","highlight")
                 .attr('x2',function(d){
-                    var distanceX=px-x;
-                    if(distanceX!=0){
-                      var directionX=(px-x)/Math.abs(px-x);
-                      return x+0.01*directionX;
-                    }else{
-                      return px;
-                    }
-                  })
+                  if(i>=data.length){
+                    return ((px-x)/100)+x;
+                  }else {
+                    return px;
+                  }})
                 .attr('y2',function(d){
-                    var distanceX=px-x;
-                    var distanceY=py-y;
-                    if(distanceX<0.001){
-                      distanceX=0;
-                    }
-                    if(distanceX!=0 && distanceY!=0){
-                      var directionY=(py-y)/Math.abs(py-y);
-                      return y+Math.abs(distanceY/distanceX)*directionY*0.01;
-                    }else if(distanceX!=0 && distanceY==0){
-                      return py;
-                    }else if(distanceX==0 && distanceY!=0){
-                      var directionY=(py-y)/Math.abs(py-y);
-                      return y+directionY*0.01;
-                    }else{
-                      return py;
-                    }
-                  })
+                  if(i>=data.length){
+                    return ((py-y)/100)+y;
+                  }else {
+                    return y;
+                  }})
                 .attr('stroke','gray')
                 .attr('stroke-width',2)
                 .attr("marker-start",function(d){return "url(#arrow)";})
@@ -340,9 +328,9 @@
 
           var stance=arr[i].stance;
           if(stance==true){
-            a.style.color="#0c9";
+            a.style.color="#557f4e";
           }else if(stance==false){
-            a.style.color="#c90";
+            a.style.color="#9b1d1d";
           }
           list.appendChild(item);
         }
@@ -386,7 +374,6 @@
            y1= Math.min(_y, startY);
            y2=y1+Math.abs(_y - startY)
       }
-
       document.onmousemove = function() {
         if (down){
         evt = window.event || arguments[0];
@@ -445,29 +432,57 @@
 
       var defs = g.append("defs");
 
-      var arrowMarker = defs.append("marker")
-            .attr("id","arrow")
-            .attr("markerUnits","strokeWidth")
-            .attr("markerWidth","8")
-            .attr("markerHeight","8")
-            .attr("viewBox","0 0 13 13")
-            .attr("refX","5")
-            .attr("refY","5")
-            .attr("orient","auto");
+      function arrowHead(){
+        var arrowMarker = defs.append("marker")
+              .attr("id","arrow")
+              .attr("markerUnits","strokeWidth")
+              .attr("markerWidth","8")
+              .attr("markerHeight","8")
+              .attr("viewBox","0 0 13 13")
+              .attr("refX","5")
+              .attr("refY","5")
+              .attr("orient","auto");
 
-      var arrow_path = "M2,2 L10,6 L2,10 L6,6 L2,2";
+        var arrow_path = "M2,2 L10,6 L2,10 L6,6 L2,2";
 
-      arrowMarker.append("path")
-            .attr("d",arrow_path)
-            .attr("fill","black");
+        arrowMarker.append("path")
+              .attr("d",arrow_path)
+              .attr("fill","black");
+      }
 
-      console.log(argument);
+      // function gradientColor(pro,con){
+      //   var gradient = svg.append("defs")
+      //     .append("linearGradient")
+      //     .attr("id", "gradient")
+      //     .attr("x1", "0%")
+      //     .attr("y1", "0%")
+      //     .attr("x2", "100%")
+      //     .attr("y2", "100%")
+      //     .attr("spreadMethod", "pad");
+      //
+      //   gradient.append("stop")
+      //     .attr("offset", "0%")
+      //     .attr("stop-color", "#77bb6c")
+      //     .attr("stop-opacity", 1);
+      //
+      //   gradient.append("stop")
+      //     .attr("offset", "100%")
+      //     .attr("stop-color", "#da2d2d")
+      //     .attr("stop-opacity", 1);
+      // }
+
       var nodes=g.selectAll('circle')
             .data(circles)
             .enter()
             .append('svg:circle')
             .attr("class","points")
-            .attr('r',function(d){ return d.overlap*5; })
+            .attr('r',function(d,i){
+              if(i<data.length){
+                return d.overlap*8;
+              }else{
+                return 8*Math.log(d.overlap+1);
+              }
+              })
             .attr('cx',function(d){return d.x;})
             .attr('cy',function(d){return d.y;})
             .attr('id',function(d,i){
@@ -479,192 +494,252 @@
             })
             .attr('fill',function(d,i){
               if(i>=data.length){
-                if(d.stance==true){
-                  return '#0C9';
+                if(d.overlap==1){
+                  if(d.stance==true){
+                    return "hsl(112, 37%, 58%)";
+                  }else{
+                    return "hsl(0, 70%, 52%)";
+                  }
                 }else{
-                  return '#C90';
+                  var pro=0;
+                  var con=0;
+                  for(var i=0;i<argument.length;i++){
+                    if(d.x==argument[i].x && d.y==argument[i].y){
+                       if(argument[i].stance==true){
+                         pro++;
+                       }else {
+                         con++
+                       }
+                    }
+                  }
+                  var proPercent=pro/(pro+con);
+                  if(proPercent>0.5){
+                    return "hsl(" +112 + ", " + 37*proPercent + "%, " + 58 + "%)";
+                  }else if(proPercent<0.5){
+                    return "hsl(" +0 + ", " + 70*proPercent + "%, " + 52 + "%)";
+                  }else if(proPercent=0.5) {
+                    return "hsl(112, 0%, 58%)";
+                  }
                 }
+                //gradient Color
+                // gradientColor(5,2);
+                // return "url(#gradient)"
 
+                // pure color
+                // if(d.stance==true){
+                //   return '#77bb6c';
+                //
+                // }else{
+                //   return '#da2d2d';
+                // }
               }else{
                 return 'black'
               }
             })
             .attr('opacity',function(d){
-              if(i>=data.length){
-                return d.score/25;
-              }else{
-                return 1.0;
-              }
+              return 1;
+              // if(i>=data.length){
+              //   return d.score/25;
+              // }else{
+              //   return 1.0;
+              // }
             })
             .on('mouseover',function(d,i){
-              if(d.overlap==1){
-                var check=d.polygon.length;
-                var points=d.polygon;
-                console.log(points);
+              if(i>=data.length){
+                if(d.overlap==1){
+                  var check=d.polygon.length;
+                  var points=d.polygon;
+                  // console.log(points);
+                  var stance=d.stance;
+                  var id=d.id;
+    							d3.select(this)
+                    .attr("fill",function(d){
+                      if(stance==true){
+                        return  "hsl(112, 37%, 58%)";
+                      }else if(stance==false){
+                        return  'hsl(0, 70%, 52%)';
+                      }
+                    })
+                    .attr("opacity",1)
+                    .attr('r',function(d,i){
+                      return 15*Math.log(d.overlap+1);
+                    })
+                    .style("stroke","white")
+                    .style("stroke-width",2);
+                  var item = document.getElementById("args"+id);
+                  if(item!=null){item.focus();}
+                  if(check>=6){
+                    var  drawPolygon=g.append("polygon")
+                      .style("stroke", "#0c9")  // colour the line
+                      .style("fill", "black")
+                      .style("opacity",0.2)    // remove any fill colour
+                      .attr("points", function(d){return points;})
+                      .attr('stroke-width',5)
+                      .attr("class","highlight");  // x,y points
+
+                  }else if(check>2){
+                    var drawLine=g.append("line")
+                      .attr('x1',function(d){return points[0];})
+                      .attr('y1',function(d){return points[1];})
+                      .attr('x2',function(d){return points[2];})
+                      .attr('y2',function(d){return points[3];})
+                      .attr("class","highlight")
+                      .attr('stroke-width',5)
+                      .style("stroke", "#0c9")
+                      .style("opacity",0.2);
+                  }
+                  var previous = d3.select(".points").node();
+                  var current=d3.select(".highlight").node();
+                  current.parentNode.insertBefore(current, previous);
+
+                // }else if(d.overlap>=3){
+                //   var overlapPolygon=polygonGraph(80,d.overlap);
+                //   var points=[];
+                //
+                //   for(var i=0;i<overlapPolygon.length;i++){
+                //     points.push(overlapPolygon[i].x+d.x, overlapPolygon[i].y+d.y)
+                //     console.log(d.x, d.y);
+                //   }
+                //
+                //   var x=d.x;
+                //   var y=d.y;
+                //   var selectedItem=[];
+                //   for (var i=0; i<argument.length; i++){
+                //     if(x==argument[i].x && y==argument[i].y){
+                //       selectedItem.push(argument[i]);
+                //     }
+                //   }
+                //   for(var i=0;i<selectedItem.length;i++){
+                //     selectedItem[i].x=points[2*i];
+                //     selectedItem[i].y=points[2*i+1];
+                //   }
+                //
+                //   for(var i=0;i<selectedItem.length;i++){
+                //     var circle=g.append('circle')
+                //       .attr("class","subPolygon")
+                //       .attr('r',function(d){ return 5; })
+                //       .attr('cx',function(d){return selectedItem[i].x;})
+                //       .attr('cy',function(d){return selectedItem[i].y;})
+                //       .attr('fill',function(d,i){
+                //         if(selectedItem[i].stance==true){
+                //             return '#77bb6c';
+                //           }else{
+                //             return '#da2d2d';
+                //           }
+                //       })
+                //       .attr('opacity',function(d){return selectedItem[i].score/25;});
+                //   }
+                //
+                //   var  drawPolygon=g.append("polygon")
+                //     .style("stroke", "#77bb6c")  // colour the line
+                //     .style("fill", "black")
+                //     .style("opacity",0.2)    // remove any fill colour
+                //     .attr("points", function(d){return points;})
+                //     .attr('stroke-width',2)
+                //     .attr("id","subPolygon")
+                //     .on("mouseout", function(d){
+                //        d3.select("#subPolygon").remove();
+                //     });  // x,y points
+                //   var previous = d3.select(".points").node();
+                //   var current=d3.select("#subPolygon").node();
+                //   current.parentNode.insertBefore(current, previous)
+                }
+              }
+
+						})
+            .on('mouseout',function(d,i){
+              if(i>=data.length){
                 var stance=d.stance;
                 var id=d.id;
   							d3.select(this)
-                  .attr("fill",function(d){
-                    if(stance==true){
-                      return  "#0c9";
-                    }else if(stance==false){
-                      return  '#c90';
+                  .attr('fill',function(d){
+                    if(d.overlap==1){
+                      if(d.stance==true){
+                        return 'hsl(112, 37%, 58%)';
+                      }else{
+                        return 'hsl(0, 70%, 52%)';
+                      }
+                    }else{
+                      var pro=0;
+                      var con=0;
+                      for(var i=0;i<argument.length;i++){
+                        if(d.x==argument[i].x && d.y==argument[i].y){
+                           if(argument[i].stance==true){
+                             pro++;
+                           }else {
+                             con++
+                           }
+                        }
+                      }
+                      var proPercent=pro/(pro+con);
+                      if(proPercent>0.5){
+                        return "hsl(" +112 + ", " + 37*proPercent + "%, " + 58 + "%)";
+                      }else if(proPercent<0.5){
+                        return "hsl(" +0 + ", " + 70*proPercent + "%, " + 52 + "%)";
+                      }else if(proPercent=0.5) {
+                        return "hsl(112, 0%, 58%)";
+                      }
                     }
                   })
-                  .attr("opacity",1)
-                  .attr('r',function(d,i){
-                    return d.overlap*10;
+                  .attr('r',function(d){
+                    return 8*Math.log(d.overlap+1);
                   })
-                  .style("stroke","white")
-                  .style("stroke-width",2);
-                var item = document.getElementById("args"+id);
-                if(item!=null){item.focus();}
-                if(check>=6){
-                  var  drawPolygon=g.append("polygon")
-                    .style("stroke", "#0c9")  // colour the line
-                    .style("fill", "black")
-                    .style("opacity",0.2)    // remove any fill colour
-                    .attr("points", function(d){return points;})
-                    .attr('stroke-width',5)
-                    .attr("class","highlight");  // x,y points
-
-                }else if(check>2){
-                  var drawLine=g.append("line")
-                    .attr('x1',function(d){return points[0];})
-                    .attr('y1',function(d){return points[1];})
-                    .attr('x2',function(d){return points[2];})
-                    .attr('y2',function(d){return points[3];})
-                    .attr("class","highlight")
-                    .attr('stroke-width',5)
-                    .style("stroke", "#0c9")
-                    .style("opacity",0.2);
-                }
-                var previous = d3.select(".points").node();
-                var current=d3.select(".highlight").node();
-                current.parentNode.insertBefore(current, previous);
-
-              // }else if(d.overlap>=3){
-              //   var overlapPolygon=polygonGraph(80,d.overlap);
-              //   var points=[];
-              //
-              //   for(var i=0;i<overlapPolygon.length;i++){
-              //     points.push(overlapPolygon[i].x+d.x, overlapPolygon[i].y+d.y)
-              //   }
-              //
-              //   var x=d.x;
-              //   var y=d.y;
-              //   var selectedItem=[];
-              //   for (var i=0; i<argument.length; i++){
-              //     if(x==argument[i].x && y==argument[i].y){
-              //       selectedItem.push(argument[i]);
-              //     }
-              //   }
-              //   for(var i=0;i<selectedItem.length;i++){
-              //     selectedItem[i].x=points[2*i];
-              //     selectedItem[i].y=points[2*i+1];
-              //   }
-              //
-              //   for(var i=0;i<selectedItem.length;i++){
-              //     var circle=g.append('circle')
-              //       .attr("class","subPolygon")
-              //       .attr('r',function(d){ return 5; })
-              //       .attr('cx',function(d){return selectedItem[i].x;})
-              //       .attr('cy',function(d){return selectedItem[i].y;})
-              //       .attr('fill',function(d,i){
-              //         if(selectedItem[i].stance==true){
-              //             return '#0C9';
-              //           }else{
-              //             return '#C90';
-              //           }
-              //       })
-              //       .attr('opacity',function(d){return selectedItem[i].score/25;});
-              //   }
-              //
-              //   var  drawPolygon=g.append("polygon")
-              //     .style("stroke", "#0c9")  // colour the line
-              //     .style("fill", "black")
-              //     .style("opacity",0.2)    // remove any fill colour
-              //     .attr("points", function(d){return points;})
-              //     .attr('stroke-width',2)
-              //     .attr("id","subPolygon")
-              //     .on("mouseout", function(d){
-              //        d3.select("#subPolygon").remove();
-              //     });  // x,y points
-              //   var previous = d3.select(".points").node();
-              //   var current=d3.select("#subPolygon").node();
-              //   current.parentNode.insertBefore(current, previous);
-              // var previous = d3.select(".points").node();
-              // var current=d3.select(".subPolygon").node();
-              // current.parentNode.insertBefore(current, previous);
-
+                  .attr('opacity',function(d){
+                    return 1;
+                    // return d.score/25;
+                  })
+                d3.select(".highlight").remove();
               }
-						})
-            .on('mouseout',function(d,i){
-              var stance=d.stance;
-              var id=d.id;
-              // document.getElementById('args'+id).blur();
-							d3.select(this)
-                .attr('fill',function(d){
-                  if(stance==true){
-                    return '#0C9';
-                  }else{
-                    return '#C90';
-                  }
-                })
-                .attr('r',function(d){
-                  return d.overlap*5;
-                })
-                .attr('opacity',function(d){
-                  return d.score/25;
-                })
-              d3.select(".highlight").remove();
 							})
-            .on('click',function(d){
-              d3.select(".argumentText").remove();
-              var x=d.x;
-              var y=d.y;
-              var selectedItem=[];
-              for (var i=0; i<argument.length; i++){
-                if(x==argument[i].x && y==argument[i].y){
-                  var id=argument[i].id;
-                  for(j=0;j<argumentList.length;j++){
-                    if(id==argumentList[j].id){
-                      var title=argumentList[j];
-                      selectedItem.push(title);
+            .on('click',function(d,i){
+              if(i>=data.length){
+                d3.select(".argumentText").remove();
+                var x=d.x;
+                var y=d.y;
+                var selectedItem=[];
+                for (var i=0; i<argument.length; i++){
+                  if(x==argument[i].x && y==argument[i].y){
+                    var id=argument[i].id;
+                    for(j=0;j<argumentList.length;j++){
+                      if(id==argumentList[j].id){
+                        var title=argumentList[j];
+                        selectedItem.push(title);
+                      }
                     }
                   }
                 }
+                document.getElementById('overall').appendChild(listArgument(selectedItem,data,circles));
               }
-
-              document.getElementById('overall').appendChild(listArgument(selectedItem,data,circles));
             });
-
-      var rect=svg.selectAll('rect')
-            .data(topicsLabel)
-            .enter()
-            .append('rect')
-            .attr("x", function(d) { return d.x+240; })
-            .attr("y", function(d) { return d.y+270;  })
-            .attr("width", function(d) { return 130; })
-            .attr("height", function(d) { return 50; })
-            .attr("fill","black")
-            .attr("id",function(d,i){return "topic"+i;})
-            .style("opacity",0.5);
+      // for lda model
+      // var rect=svg.selectAll('rect')
+      //       .data(topicsLabel)
+      //       .enter()
+      //       .append('rect')
+      //       .attr("x", function(d) { return d.x+240; })
+      //       .attr("y", function(d) { return d.y+270;  })
+      //       .attr("width", function(d) { return 130; })
+      //       .attr("height", function(d) { return 50; })
+      //       .attr("fill","white")
+      //       .attr("id",function(d,i){return "topic"+i;})
+      //       .style("opacity",0.5);
 
       var lable=svg.selectAll('text')
             .data(topicsLabel)
             .enter()
             .append('text')
             .attr("text-anchor", "middle")
-            .attr('x',function(d){return d.x+305;})
+            .attr('x',function(d){return d.x+300;})
             .attr('y',function(d){return d.y+300;})
-            .attr("fill","#FFF")
+            .attr("fill","#000")
+            .style("font-weight","bold")
+            .style("font-family","Helvetica")
             .text(function(d){return d.label;});
 
-      for(var i=0;i<topicsLabel.length;i++){
-          wordDisplay(140,50,topicsLabel[i].x,topicsLabel[i].y);
-      }
-
+      // for lda model
+      // for(var i=0;i<topicsLabel.length;i++){
+      //     wordDisplay(140,50,topicsLabel[i].x,topicsLabel[i].y);
+      // }
       var line=g.selectAll('line')
             .data(circles)
             .enter()
@@ -673,41 +748,50 @@
             .attr('y1',function(d){return d.y;})
             .attr('x2',function(d,i){
               if(i>=data.length){
-                var distanceX=d.px-d.x;
-                if(distanceX!=0){
-                  var directionX=(d.px-d.x)/Math.abs(d.px-d.x);
-                  return d.x+0.01*directionX;
-                }else{
-                  return d.px;
-                }
+                return ((d.px-d.x)/100)+d.x;
+                // var distanceX=d.px-d.x;
+                // if(distanceX!=0){
+                //   var directionX=(d.px-d.x)/Math.abs(d.px-d.x);
+                //   return d.x+0.01*directionX;
+                // }else{
+                //   return d.px;
+                // }
               }else {
                 return d.px;
               }})
             .attr('y2',function(d,i){
               if(i>=data.length){
-                var distanceX=d.px-d.x;
-                var distanceY=d.py-d.y;
-                if(distanceX<0.001){
-                  distanceX=0;
-                }
-                if(distanceX!=0 && distanceY!=0){
-                  var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
-                  return d.y+Math.abs(distanceY/distanceX)*directionY*0.01;
-                }else if(distanceX!=0 && distanceY==0){
-                  return d.py;
-                }else if(distanceX==0 && distanceY!=0){
-                  var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
-                  return d.y+directionY*0.01;
-                }else{
-                  return d.py;
-                }
+                return ((d.py-d.y)/100)+d.y;
+                // var distanceX=d.px-d.x;
+                // var distanceY=d.py-d.y;
+                // if(distanceX<0.001){
+                //   distanceX=0;
+                // }
+                // if(distanceX!=0 && distanceY!=0){
+                //   var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
+                //   return d.y+Math.abs(distanceY/distanceX)*directionY*0.01;
+                // }else if(distanceX!=0 && distanceY==0){
+                //   return d.py;
+                // }else if(distanceX==0 && distanceY!=0){
+                //   var directionY=(d.py-d.y)/Math.abs(d.py-d.y);
+                //   return d.y+directionY*0.01;
+                // }else{
+                //   return d.py;
+                // }
               }else {
                 return d.py;
             }})
             .attr('stroke','gray')
-            .attr('stroke-width',2)
+            .attr('stroke-width',function(d,i){
+              if(i<data.length){
+                return 2;
+              }else {
+                return Math.log(d.overlap+3);
+              }
+            })
             .attr("marker-start",function(d,i){
               if(i>=data.length){
+                arrowHead()
                 return "url(#arrow)"
               }else {
                 return null;
