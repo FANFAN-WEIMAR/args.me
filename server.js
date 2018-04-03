@@ -1,8 +1,9 @@
 // const http = require('http');
 const fs = require('fs');
 
-const hostname = '127.0.0.1';
-const port = 3000;
+// const hostname = '127.0.0.1';
+const hostname = '141.54.159.178';
+const port = 8080;
 
 // express
 const express = require('express');
@@ -41,7 +42,7 @@ app.post('/', function(req, res) {
   let argumentList = req.body;
   console.log('number of arguments received: ' + argumentList.length);
 
-  let url = 'mongodb://localhost:27017/wikimodel';
+  let url = 'mongodb://141.54.159.178:27017/wikimodel';
   MongoClient.connect(url, function (err, client) {
     if(err) throw err;
     console.log('connected successfully to database!');
@@ -87,6 +88,6 @@ app.get('/js/lodash.js', (req, res) => {
   res.sendFile('web/js/lodash.js', options);
 });
 
-app.listen(port, () => {
+app.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 })
