@@ -6,7 +6,7 @@
     "d3": "^4.13.0",
     "d3-cloud": "^1.2.5",
     "express": "^4.16.2",
-    "mongodb": "^3.0.2",
+    "mongodb": "^3.0.5",
     "mongoose": "^5.0.2",
     "package.json": "^2.0.1"
   },
