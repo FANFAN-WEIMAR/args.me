@@ -535,8 +535,8 @@
 		<div id="header">
 			<h1>Args.me</h1>
 			<div class="SearchContainer">
-					<input id="searchText" type="text" class="searchTerm"/>
-					<button type="submit" class="searchButton" onclick="searchQuery()">Go!</button>
+					<input id="searchText" type="text" onkeypress="Javascript: if(event.keyCode==13) {startSearch()}" class="searchTerm"/>
+					<button type="submit" class="searchButton" onclick="startSearch()">Go!</button>
 			</div>
 		</div>
 		<div id="body">
