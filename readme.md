@@ -14,9 +14,9 @@
 ```
 
 3. start database server from folder /home/vofa2169/desktop/interactive-argument-vis
-'''
+```
   mongod --port 27017 --bind_ip 141.54.159.178 --dbpath=./database
-'''
+```
 
 4.  run node server
 ```
